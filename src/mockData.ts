@@ -141,7 +141,7 @@ export const MOCK_NEWS: Record<string, NewsItem[]> = {
       headline: "Sheldon Keefe previews matchup against Bruins: 'Consistency is key'",
       description: "New Jersey Devils head coach Sheldon Keefe speaks on the challenges of containing David Pastrnak and the Bruins physical play. Emphasizes structured defensive zone entry.",
       published: "2026-07-05T15:00:00Z",
-      link: "https://www.espn.com/nhl/team/_/name/nsh/nashville-predators"
+      link: "https://www.espn.com/nhl/team/_/name/njd/new-jersey-devils"
     },
     {
       id: "njd-2",

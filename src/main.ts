@@ -288,7 +288,7 @@ function init(): void {
   refs.demoModeToggle.addEventListener("change", async () => {
     state.demoMode = refs.demoModeToggle.checked;
     const date = state.demoMode
-      ? "2026-03-10"
+      ? DEMO_DATE
       : new Date().toISOString().split("T")[0];
     refs.datePicker.value = date;
     state.currentDate     = date;
@@ -344,7 +344,7 @@ function init(): void {
   refs.parseLineupBtn.addEventListener("click", () => {
     const rawText = refs.quickPasteTextarea.value.trim();
     const team    = refs.importTeamSelect.value as "away" | "home";
-    if (!rawText) { alert("Paste projected lines first!"); return; }
+    if (!rawText) { showToast(refs, "Paste projected lines first!"); return; }
 
     const { fLines, dPairs, goalies } = parseProjectedLines(rawText, team, state);
     const container = team === "away" ? refs.awayLineupSlots : refs.homeLineupSlots;
@@ -357,10 +357,10 @@ function init(): void {
   refs.generateThreadBtn.addEventListener("click",  () => generateThread(refs, state));
   refs.copyToClipboardBtn.addEventListener("click", () => {
     const text = refs.outputContainer.textContent ?? "";
-    if (!text) { alert("Generate a thread first!"); return; }
+    if (!text) { showToast(refs, "Generate a thread first!"); return; }
     navigator.clipboard.writeText(text)
       .then(() => showToast(refs, "Copied to clipboard!"))
-      .catch(() => alert("Copy failed — copy manually from the box."));
+      .catch(() => showToast(refs, "Copy failed — copy manually from the box."));
   });
 
   // Tab switcher

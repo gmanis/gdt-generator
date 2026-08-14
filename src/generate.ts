@@ -3,6 +3,7 @@ import { AppState } from "./state";
 import { BbCodeRenderer, MarkdownRenderer, HtmlRenderer, FormatRenderer, HeadshotMap } from "./renderers";
 import { DEFAULT_TEMPLATES, TemplateEngine } from "./templates";
 import { Roster } from "./types";
+import { showToast } from "./ui";
 
 // ─── Headshot lookup ──────────────────────────────────────────────────────────
 
@@ -147,7 +148,7 @@ function buildPreview(raw: string, style: string): string {
 
 export function generateThread(refs: AppRefs, state: AppState): void {
   if (!state.selectedGame) {
-    alert("Please select a game first!");
+    showToast(refs, "Please select a game first!");
     return;
   }
 
