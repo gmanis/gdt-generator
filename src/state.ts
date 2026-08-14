@@ -16,6 +16,7 @@ export const emptyLineup = (): LineupConfig => ({
 
 export interface AppState {
   demoMode: boolean;
+  favoriteTeam: string;
   currentDate: string;
   games: GameSummary[];
   selectedGame: GameSummary | null;
@@ -27,7 +28,8 @@ export interface AppState {
 }
 
 export const state: AppState = {
-  demoMode: true,
+  demoMode: false,
+  favoriteTeam: "",
   currentDate: "",
   games: [],
   selectedGame: null,

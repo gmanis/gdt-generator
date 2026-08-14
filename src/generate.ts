@@ -92,9 +92,11 @@ function buildValues(state: AppState, renderer: FormatRenderer): Record<string, 
     values["team_comparison_table"] = renderer.renderBold("Stats comparison unavailable.");
   }
 
-  // Lineups
-  values["away_lineup"] = renderer.renderLineup(lineups.away, buildHeadshotMap(rosters.away));
-  values["home_lineup"] = renderer.renderLineup(lineups.home, buildHeadshotMap(rosters.home));
+  // Lineups — plain text, or with headshots inlined per player
+  values["away_lineup"] = renderer.renderLineup(lineups.away);
+  values["home_lineup"] = renderer.renderLineup(lineups.home);
+  values["away_lineup_images"] = renderer.renderLineupWithPhotos(lineups.away, buildHeadshotMap(rosters.away));
+  values["home_lineup_images"] = renderer.renderLineupWithPhotos(lineups.home, buildHeadshotMap(rosters.home));
 
   // Quotes
   values["quotes"] = quotes.length > 0

@@ -15,13 +15,6 @@
         <h1>Game Thread Generator <span>Beta</span></h1>
       </div>
       <div class="header-controls">
-        <div class="toggle-container">
-          <label for="demoModeToggle">Demo Mode</label>
-          <label class="switch">
-            <input type="checkbox" id="demoModeToggle" data-ref="demoModeToggle" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
         <button data-ref="openSettingsBtn" class="settings-btn" title="Settings">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
@@ -157,7 +150,7 @@
               id="templateBodyEditor"
               data-ref="templateBodyEditor"
               class="editor"
-              placeholder="Write your post template here… Use {{home_team}}, {{away_team}}, {{home_lineup}}, etc."
+              placeholder="Write your post template here… Use {{home_team}}, {{away_team}}, {{home_lineup}} (or {{home_lineup_images}} to include player photos), etc."
             ></textarea>
           </div>
         </div>
@@ -205,11 +198,27 @@
         <button data-ref="closeSettingsModal" class="close-modal">&times;</button>
       </div>
       <div class="field" style="margin-bottom:1rem;">
+        <label for="favoriteTeamSelect">Favorite Team</label>
+        <select id="favoriteTeamSelect" data-ref="favoriteTeamSelect">
+          <option value="">-- None --</option>
+        </select>
+        <p class="info-text">When a date has multiple games, your favorite team's game is auto-selected.</p>
+      </div>
+
+      <div class="field" style="margin-bottom:1rem; flex-direction:row; align-items:center; justify-content:space-between;">
+        <label for="demoModeToggle" style="text-transform:none; font-size:0.9rem; font-weight:600; color:var(--text-primary);">Demo Mode (use sample data instead of live NHL/ESPN APIs)</label>
+        <label class="switch">
+          <input type="checkbox" id="demoModeToggle" data-ref="demoModeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="field" style="margin-bottom:1rem;">
         <label for="corsProxyInput">CORS Proxy URL (leave blank to disable)</label>
         <input type="text" id="corsProxyInput" data-ref="corsProxyInput" placeholder="https://corsproxy.io/?">
         <p class="info-text">Must prepend to target URLs. Default is <strong>https://corsproxy.io/?</strong></p>
       </div>
-      
+
       <div style="margin:1.5rem 0; border-top:1px solid var(--border-color); padding-top:1rem;">
         <h4 style="font-size:0.9rem; margin-bottom:0.5rem;">Cache</h4>
         <div style="display:flex; justify-content:space-between; align-items:center;">

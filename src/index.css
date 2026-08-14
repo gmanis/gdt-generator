@@ -106,19 +106,20 @@ header {
   gap: 1rem;
 }
 
-/* Toggle Switch */
+/* Toggle Switch — used on light backgrounds (settings modal) */
 .toggle-container {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-on-dark);
+  color: var(--text-primary);
 }
 
 .switch {
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
   width: 44px;
   height: 24px;
 }
@@ -136,10 +137,10 @@ header {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: hsla(0, 0%, 0%, 0.25);
+  background-color: var(--bg-card-alt);
   transition: var(--transition-smooth);
   border-radius: 34px;
-  border: 1px solid hsla(0, 0%, 0%, 0.3);
+  border: 1px solid var(--border-color);
 }
 
 .slider:before {
@@ -148,8 +149,9 @@ header {
   height: 16px;
   width: 16px;
   left: 3px;
-  bottom: 3px;
-  background-color: var(--text-on-dark);
+  bottom: 2px;
+  background-color: var(--bg-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: var(--transition-smooth);
   border-radius: 50%;
 }

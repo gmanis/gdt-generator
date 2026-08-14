@@ -3,6 +3,9 @@ import { LineupConfig } from "./types";
 // Maps a player's "First Last" name to their headshot photo URL.
 export type HeadshotMap = Record<string, string>;
 
+// Formats a single player's name for one lineup slot (plain, or with a headshot prefixed).
+type PlayerFormatter = (name: string) => string;
+
 export interface FormatRenderer {
   id: string;
   name: string;
@@ -12,7 +15,8 @@ export interface FormatRenderer {
   renderTable(headers: string[], rows: string[][]): string;
   renderColor(text: string, color: string): string;
   renderSize(text: string, size: string): string;
-  renderLineup(lineup: LineupConfig, headshots: HeadshotMap): string;
+  renderLineup(lineup: LineupConfig): string;
+  renderLineupWithPhotos(lineup: LineupConfig, headshots: HeadshotMap): string;
   renderQuote(author: string, role: string, text: string): string;
 }
 
@@ -43,7 +47,7 @@ export class BbCodeRenderer implements FormatRenderer {
 
   renderTable(headers: string[], rows: string[][]): string {
     let out = "[TABLE]\n";
-    
+
     // Headers
     out += "  [TR]\n";
     headers.forEach(h => {
@@ -64,13 +68,7 @@ export class BbCodeRenderer implements FormatRenderer {
     return out;
   }
 
-  renderLineup(lineup: LineupConfig, headshots: HeadshotMap): string {
-    const player = (name: string): string => {
-      if (!name) return "TBD";
-      const headshot = headshots[name];
-      return headshot ? `[IMG width=24 height=24]${headshot}[/IMG] ${name}` : name;
-    };
-
+  private buildLineup(lineup: LineupConfig, player: PlayerFormatter): string {
     let out = "";
 
     out += `[B][SIZE=4]Forwards[/SIZE][/B]\n`;
@@ -95,6 +93,18 @@ export class BbCodeRenderer implements FormatRenderer {
     }
 
     return out;
+  }
+
+  renderLineup(lineup: LineupConfig): string {
+    return this.buildLineup(lineup, name => name || "TBD");
+  }
+
+  renderLineupWithPhotos(lineup: LineupConfig, headshots: HeadshotMap): string {
+    return this.buildLineup(lineup, name => {
+      if (!name) return "TBD";
+      const headshot = headshots[name];
+      return headshot ? `[IMG width=24 height=24]${headshot}[/IMG] ${name}` : name;
+    });
   }
 
   renderQuote(author: string, role: string, text: string): string {
@@ -134,12 +144,12 @@ export class MarkdownRenderer implements FormatRenderer {
 
   renderTable(headers: string[], rows: string[][]): string {
     let out = "\n";
-    
+
     // Headers
     out += `| ${headers.join(" | ")} |\n`;
     // Separator
     out += `| ${headers.map(() => "---").join(" | ")} |\n`;
-    
+
     // Rows
     rows.forEach(row => {
       out += `| ${row.join(" | ")} |\n`;
@@ -148,13 +158,7 @@ export class MarkdownRenderer implements FormatRenderer {
     return out + "\n";
   }
 
-  renderLineup(lineup: LineupConfig, headshots: HeadshotMap): string {
-    const player = (name: string): string => {
-      if (!name) return "TBD";
-      const headshot = headshots[name];
-      return headshot ? `![${name}](${headshot}) ${name}` : name;
-    };
-
+  private buildLineup(lineup: LineupConfig, player: PlayerFormatter): string {
     let out = "";
 
     out += `### Forwards\n`;
@@ -179,6 +183,18 @@ export class MarkdownRenderer implements FormatRenderer {
     }
 
     return out;
+  }
+
+  renderLineup(lineup: LineupConfig): string {
+    return this.buildLineup(lineup, name => name || "TBD");
+  }
+
+  renderLineupWithPhotos(lineup: LineupConfig, headshots: HeadshotMap): string {
+    return this.buildLineup(lineup, name => {
+      if (!name) return "TBD";
+      const headshot = headshots[name];
+      return headshot ? `![${name}](${headshot}) ${name}` : name;
+    });
   }
 
   renderQuote(author: string, role: string, text: string): string {
@@ -215,7 +231,7 @@ export class HtmlRenderer implements FormatRenderer {
 
   renderTable(headers: string[], rows: string[][]): string {
     let out = `<table style="width: 100%; border-collapse: collapse; margin: 15px 0; font-family: sans-serif;">\n`;
-    
+
     // Headers
     out += "  <thead>\n    <tr style=\"background-color: #2a2a2e; border-bottom: 2px solid #444;\">\n";
     headers.forEach(h => {
@@ -237,16 +253,7 @@ export class HtmlRenderer implements FormatRenderer {
     return out;
   }
 
-  renderLineup(lineup: LineupConfig, headshots: HeadshotMap): string {
-    const player = (name: string): string => {
-      if (!name) return "TBD";
-      const headshot = headshots[name];
-      const img = headshot
-        ? `<img src="${headshot}" alt="" style="height: 28px; width: 28px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 4px;">`
-        : "";
-      return `${img}${name}`;
-    };
-
+  private buildLineup(lineup: LineupConfig, player: PlayerFormatter): string {
     let out = `<div style="background-color: #1e1e24; border: 1px solid #333; border-radius: 6px; padding: 15px; font-family: sans-serif; color: #ccc;">\n`;
 
     out += `  <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px; color: #fff; border-bottom: 1px solid #444; padding-bottom: 5px;">Forwards</div>\n`;
@@ -272,6 +279,21 @@ export class HtmlRenderer implements FormatRenderer {
 
     out += "</div>";
     return out;
+  }
+
+  renderLineup(lineup: LineupConfig): string {
+    return this.buildLineup(lineup, name => name || "TBD");
+  }
+
+  renderLineupWithPhotos(lineup: LineupConfig, headshots: HeadshotMap): string {
+    return this.buildLineup(lineup, name => {
+      if (!name) return "TBD";
+      const headshot = headshots[name];
+      const img = headshot
+        ? `<img src="${headshot}" alt="" style="height: 28px; width: 28px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 4px;">`
+        : "";
+      return `${img}${name}`;
+    });
   }
 
   renderQuote(author: string, role: string, text: string): string {

@@ -4,7 +4,6 @@
  */
 export interface AppRefs {
   // Header controls
-  demoModeToggle: HTMLInputElement;
   datePicker: HTMLInputElement;
   gameSelect: HTMLSelectElement;
   openImportModalBtn: HTMLButtonElement;
@@ -47,6 +46,8 @@ export interface AppRefs {
 
   // Settings modal
   settingsModal: HTMLDivElement;
+  demoModeToggle: HTMLInputElement;
+  favoriteTeamSelect: HTMLSelectElement;
   corsProxyInput: HTMLInputElement;
   cacheStatsText: HTMLSpanElement;
   clearCacheBtn: HTMLButtonElement;

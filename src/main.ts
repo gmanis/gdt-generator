@@ -7,11 +7,16 @@ import { CacheManager } from "./cache";
 import { MOCK_QUOTES } from "./mockData";
 import { Quote, NewsItem } from "./types";
 import { showToast, showLoading, hideLoading, openModal, closeModal } from "./ui";
+import { NHL_TEAMS } from "./teams";
 
 const provider = new NhlLeagueProvider();
 
 // Demo mode always browses this fixed date so the mock schedule resolves.
 const DEMO_DATE = "2026-03-10";
+
+function dateForMode(demoMode: boolean): string {
+  return demoMode ? DEMO_DATE : new Date().toISOString().split("T")[0];
+}
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
@@ -26,6 +31,22 @@ function loadSettings(refs: AppRefs): void {
   const savedStyle = localStorage.getItem("gtg_settings_current_template") ?? "bbcode";
   refs.templateStyleSelect.value = savedStyle;
   loadTemplateForStyle(refs);
+
+  // Demo mode — persisted, off by default
+  const savedDemoMode = localStorage.getItem("gtg_settings_demo_mode") === "true";
+  refs.demoModeToggle.checked = savedDemoMode;
+  state.demoMode = savedDemoMode;
+
+  // Favorite team
+  NHL_TEAMS.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t.abbrev;
+    opt.textContent = t.name;
+    refs.favoriteTeamSelect.appendChild(opt);
+  });
+  const savedFavorite = localStorage.getItem("gtg_settings_favorite_team") ?? "";
+  refs.favoriteTeamSelect.value = savedFavorite;
+  state.favoriteTeam = savedFavorite;
 }
 
 function loadTemplateForStyle(refs: AppRefs): void {
@@ -94,14 +115,19 @@ async function loadGamesList(refs: AppRefs): Promise<void> {
       refs.openImportModalBtn.style.display = "none";
       clearGameDetails(refs);
     } else {
+      const favoriteIdx = state.favoriteTeam
+        ? state.games.findIndex(g => g.awayTeam.abbrev === state.favoriteTeam || g.homeTeam.abbrev === state.favoriteTeam)
+        : -1;
+      const selectedIdx = favoriteIdx >= 0 ? favoriteIdx : 0;
+
       state.games.forEach((game, idx) => {
         const opt = document.createElement("option");
         opt.value = String(game.id);
         opt.textContent = `${game.awayTeam.abbrev} @ ${game.homeTeam.abbrev} (${game.venue})`;
-        if (idx === 0) opt.selected = true;
+        if (idx === selectedIdx) opt.selected = true;
         refs.gameSelect.appendChild(opt);
       });
-      state.selectedGame = state.games[0];
+      state.selectedGame = state.games[selectedIdx];
       refs.openImportModalBtn.style.display = "block";
       await loadSelectedGameDetails(refs);
     }
@@ -271,29 +297,35 @@ function renderQuotesList(refs: AppRefs): void {
 function init(): void {
   const refs = collectRefs();
 
-  // Settings
+  // Settings (loadSettings sets state.demoMode/state.favoriteTeam from localStorage)
   loadSettings(refs);
   refreshCacheStats(refs);
 
-  // Initial date — use a demo date so the mock schedule resolves
-  refs.datePicker.value = DEMO_DATE;
-  state.currentDate     = DEMO_DATE;
+  // Initial date depends on the persisted demo-mode setting
+  const initialDate = dateForMode(state.demoMode);
+  refs.datePicker.value = initialDate;
+  state.currentDate     = initialDate;
 
   // Load quotes
   loadQuotes(refs);
 
   // ── Event listeners ──────────────────────────────────────────────────────
 
-  // Demo toggle
+  // Demo mode (in Settings)
   refs.demoModeToggle.addEventListener("change", async () => {
     state.demoMode = refs.demoModeToggle.checked;
-    const date = state.demoMode
-      ? DEMO_DATE
-      : new Date().toISOString().split("T")[0];
+    localStorage.setItem("gtg_settings_demo_mode", String(state.demoMode));
+    const date = dateForMode(state.demoMode);
     refs.datePicker.value = date;
     state.currentDate     = date;
     loadQuotes(refs);
     await loadGamesList(refs);
+  });
+
+  // Favorite team (in Settings)
+  refs.favoriteTeamSelect.addEventListener("change", () => {
+    state.favoriteTeam = refs.favoriteTeamSelect.value;
+    localStorage.setItem("gtg_settings_favorite_team", state.favoriteTeam);
   });
 
   // Date picker
@@ -378,12 +410,7 @@ function init(): void {
   });
 
   // Kick off initial data load
-  handleDemoToggle(refs);
-}
-
-async function handleDemoToggle(refs: AppRefs): Promise<void> {
-  state.demoMode = refs.demoModeToggle.checked;
-  await loadGamesList(refs);
+  loadGamesList(refs);
 }
 
 window.addEventListener("DOMContentLoaded", init);
