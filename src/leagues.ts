@@ -233,15 +233,9 @@ export class NhlLeagueProvider implements LeagueProvider {
   }
 
   async fetchTeamStats(teamAbbrev: string, standings: StandingsTeam[], demoMode: boolean): Promise<TeamStats | null> {
-    // Find team in standings
     const s = standings.find(t => t.teamAbbrev === teamAbbrev);
     if (!s) return null;
 
-    // The standings response carries goalsFor/goalsAgainst directly, but not
-    // PP%/PK% — the NHL API doesn't expose those on this endpoint, so they're
-    // filled with a league-average placeholder until we wire up a real source.
-
-    // For demoMode, return realistic stats
     if (demoMode) {
       if (teamAbbrev === "NJD") {
         return { wins: 44, losses: 30, otLosses: 8, points: 96, gamesPlayed: 82, goalsFor: 264, goalsAgainst: 252, powerPlayPct: 22.4, penaltyKillPct: 80.2 };
@@ -250,38 +244,68 @@ export class NhlLeagueProvider implements LeagueProvider {
       }
     }
 
-    try {
-      // Find the detailed team in the standings raw response (we fetch standings raw data)
-      const rawStandings = CacheManager.get<any>("nhl_standings_now");
-      if (rawStandings && rawStandings.standings) {
-        const rawTeam = rawStandings.standings.find((t: any) => (t.teamAbbrev?.default || t.teamAbbrev) === teamAbbrev);
-        if (rawTeam) {
-          // Calculate values
-          return {
-            wins: rawTeam.wins || 0,
-            losses: rawTeam.losses || 0,
-            otLosses: rawTeam.otLosses || 0,
-            points: rawTeam.points || 0,
-            gamesPlayed: rawTeam.gamesPlayed || 0,
-            goalsFor: rawTeam.goalFor || 0,
-            goalsAgainst: rawTeam.goalAgainst || 0,
-            ...LEAGUE_AVERAGE_SPECIAL_TEAMS
-          };
-        }
+    // The standings response we already fetched carries each team's seasonId,
+    // which the team-summary endpoint below needs to know which season to report on.
+    const rawStandings = CacheManager.get<any>("nhl_standings_now");
+    const rawTeam = rawStandings?.standings?.find((t: any) => (t.teamAbbrev?.default || t.teamAbbrev) === teamAbbrev);
+    const seasonId = rawTeam?.seasonId;
+
+    if (seasonId) {
+      try {
+        const real = await this.fetchRealTeamStats(teamAbbrev, seasonId);
+        if (real) return real;
+      } catch (e) {
+        console.warn("fetchTeamStats: team/summary lookup failed:", e);
       }
-    } catch (e) {
-      console.warn("fetchTeamStats failed parsing standings:", e);
     }
 
+    // Real stats lookup failed — fall back to what standings already gives us,
+    // with a league-average placeholder for PP%/PK%.
     return {
       wins: s.wins,
       losses: s.losses,
       otLosses: s.otLosses,
       points: s.points,
       gamesPlayed: s.gamesPlayed,
-      goalsFor: 0,
-      goalsAgainst: 0,
+      goalsFor: rawTeam?.goalFor ?? 0,
+      goalsAgainst: rawTeam?.goalAgainst ?? 0,
       ...LEAGUE_AVERAGE_SPECIAL_TEAMS
+    };
+  }
+
+  /**
+   * Real wins/losses/goals/PP%/PK% from the NHL stats API for a given season.
+   * That endpoint keys rows by an internal numeric teamId (not the abbrev used
+   * everywhere else), so this also resolves the team list to find the right one —
+   * matched only against ids that actually appear in this season's summary, since
+   * relocated/renamed franchises (e.g. Utah) can have more than one id on file.
+   */
+  private async fetchRealTeamStats(teamAbbrev: string, seasonId: number): Promise<TeamStats | null> {
+    const summaryUrl = `https://api.nhle.com/stats/rest/en/team/summary?cayenneExp=seasonId=${seasonId}%20and%20gameTypeId=2`;
+    const teamListUrl = "https://api.nhle.com/stats/rest/en/team";
+
+    const [summary, teamList] = await Promise.all([
+      this.fetchWithProxy<{ data: any[] }>(summaryUrl, `nhl_team_summary_${seasonId}`, 1000 * 60 * 60 * 6),
+      this.fetchWithProxy<{ data: any[] }>(teamListUrl, "nhl_team_list", 1000 * 60 * 60 * 24 * 30)
+    ]);
+
+    const idsInSummary = new Set(summary.data.map(r => r.teamId));
+    const teamEntry = teamList.data.find(t => t.triCode === teamAbbrev && idsInSummary.has(t.id));
+    const row = teamEntry && summary.data.find(r => r.teamId === teamEntry.id);
+    if (!row) return null;
+
+    const pct = (frac: number): number => Math.round((frac || 0) * 1000) / 10; // fraction -> percent, 1 decimal
+
+    return {
+      wins: row.wins ?? 0,
+      losses: row.losses ?? 0,
+      otLosses: row.otLosses ?? 0,
+      points: row.points ?? 0,
+      gamesPlayed: row.gamesPlayed ?? 0,
+      goalsFor: row.goalsFor ?? 0,
+      goalsAgainst: row.goalsAgainst ?? 0,
+      powerPlayPct: pct(row.powerPlayPct),
+      penaltyKillPct: pct(row.penaltyKillPct)
     };
   }
 
@@ -324,6 +348,7 @@ export class NhlLeagueProvider implements LeagueProvider {
 
   private async getEspnTeamId(teamAbbrev: string): Promise<number | null> {
     const upper = teamAbbrev.toUpperCase();
+    const espnAbbrev = ESPN_ABBREV_OVERRIDES[upper] ?? upper;
 
     try {
       const url = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams";
@@ -331,7 +356,7 @@ export class NhlLeagueProvider implements LeagueProvider {
       const teams = data.sports?.[0]?.leagues?.[0]?.teams ?? [];
       for (const tItem of teams) {
         const team = tItem.team;
-        if (team?.abbreviation?.toUpperCase() === upper && team.id) {
+        if (team?.abbreviation?.toUpperCase() === espnAbbrev && team.id) {
           return Number(team.id);
         }
       }
@@ -344,13 +369,19 @@ export class NhlLeagueProvider implements LeagueProvider {
   }
 }
 
-// NOTE: several of these fallback IDs are unverified/best-guess (a handful of
-// teams below share the same id, which can't all be right) and only ever
-// matter if the live ESPN team list lookup above fails. Worth auditing
-// against ESPN's actual team IDs before relying on this path.
+// ESPN uses different abbreviations than the NHL API for these five teams —
+// without this translation, the live lookup above silently never matches them
+// and always falls through to the hardcoded table below.
+const ESPN_ABBREV_OVERRIDES: Record<string, string> = {
+  NJD: "NJ", LAK: "LA", SJS: "SJ", TBL: "TB", UTA: "UTAH"
+};
+
+// Verified directly against https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams
+// on 2026-08-14. Only used if the live lookup above fails.
 const ESPN_TEAM_ID_FALLBACK: Record<string, number> = {
-  NJD: 29, NYR: 28, NYI: 27, PHI: 4, PIT: 8, WSH: 5, CAR: 12, CBJ: 21,
-  BOS: 6, BUF: 7, DET: 5, FLA: 26, MTL: 10, OTT: 9, TBL: 14, TOR: 21,
-  CHI: 4, COL: 21, DAL: 9, MIN: 30, NSH: 27, STL: 19, WPG: 4,
-  ANA: 25, CGY: 3, EDM: 10, LAK: 41, SJS: 18, SEA: 124292, VAN: 22, VGK: 37, UTA: 30
+  ANA: 25, BOS: 1, BUF: 2, CAR: 7, CBJ: 29, CGY: 3, CHI: 4,
+  COL: 17, DAL: 9, DET: 5, EDM: 6, FLA: 26, LAK: 8, MIN: 30, MTL: 10,
+  NJD: 11, NSH: 27, NYI: 12, NYR: 13, OTT: 14, PHI: 15, PIT: 16, SJS: 18,
+  SEA: 124292, STL: 19, TBL: 20, TOR: 21, UTA: 129764, VAN: 22, VGK: 37,
+  WPG: 28, WSH: 23
 };

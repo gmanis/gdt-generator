@@ -23,7 +23,7 @@ export default async function handler(request: Request) {
 
   try {
     const parsedUrl = new URL(url);
-    const allowedHostnames = ['api-web.nhle.com', 'site.api.espn.com'];
+    const allowedHostnames = ['api-web.nhle.com', 'api.nhle.com', 'site.api.espn.com'];
     if (!allowedHostnames.includes(parsedUrl.hostname)) {
       return jsonResponse({ error: 'Hostname not allowed' }, 403);
     }
