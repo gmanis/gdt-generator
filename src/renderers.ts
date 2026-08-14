@@ -1,4 +1,4 @@
-import { LineupConfig } from "./types";
+import { LineupConfig, TweetEmbed } from "./types";
 
 // Maps a player's "First Last" name to their headshot photo URL.
 export type HeadshotMap = Record<string, string>;
@@ -18,6 +18,7 @@ export interface FormatRenderer {
   renderLineup(lineup: LineupConfig): string;
   renderLineupWithPhotos(lineup: LineupConfig, headshots: HeadshotMap): string;
   renderQuote(author: string, role: string, text: string): string;
+  renderTweets(tweets: TweetEmbed[]): string;
 }
 
 export class BbCodeRenderer implements FormatRenderer {
@@ -111,6 +112,11 @@ export class BbCodeRenderer implements FormatRenderer {
     const citation = role ? `${author} (${role})` : author;
     return `[QUOTE="${citation}"]${text}[/QUOTE]`;
   }
+
+  renderTweets(tweets: TweetEmbed[]): string {
+    // Bare URLs — XenForo auto-embeds a pasted tweet link into a rich card itself.
+    return tweets.map(t => t.url).join("\n\n");
+  }
 }
 
 export class MarkdownRenderer implements FormatRenderer {
@@ -200,6 +206,11 @@ export class MarkdownRenderer implements FormatRenderer {
   renderQuote(author: string, role: string, text: string): string {
     const citation = role ? `${author} (${role})` : author;
     return `> "${text}"\n> — *${citation}*\n`;
+  }
+
+  renderTweets(tweets: TweetEmbed[]): string {
+    // Bare URLs — Reddit auto-embeds a pasted tweet link itself.
+    return tweets.map(t => t.url).join("\n\n");
   }
 }
 
@@ -302,5 +313,10 @@ export class HtmlRenderer implements FormatRenderer {
   <p style="margin: 0 0 5px 0;">"${text}"</p>
   <cite style="font-size: 12px; color: #999; display: block; font-style: normal;">— ${citation}</cite>
 </blockquote>`;
+  }
+
+  renderTweets(tweets: TweetEmbed[]): string {
+    // Twitter's own oEmbed HTML — a real embedded tweet card, not a paraphrase.
+    return tweets.map(t => `<div style="margin: 15px 0;">${t.html}</div>`).join("\n");
   }
 }

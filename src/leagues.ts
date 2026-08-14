@@ -1,5 +1,6 @@
 import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, TeamStats, TeamSummary, Player } from "./types";
 import { CacheManager } from "./cache";
+import { fetchWithProxy } from "./proxy";
 import * as mock from "./mockData";
 
 // The NHL standings endpoint doesn't expose PP%/PK%, so real (non-demo) team
@@ -20,46 +21,6 @@ export interface LeagueProvider {
 export class NhlLeagueProvider implements LeagueProvider {
   id = "nhl";
   name = "NHL";
-
-  private getProxyUrl(targetUrl: string): string {
-    const proxySetting = localStorage.getItem("gtg_settings_cors_proxy");
-    if (proxySetting === null) {
-      // Default to corsproxy.io
-      return `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
-    }
-    if (!proxySetting.trim()) {
-      return targetUrl; // Direct connection
-    }
-    // Replace placeholder {url} or just prepend
-    if (proxySetting.includes("{url}")) {
-      return proxySetting.replace("{url}", encodeURIComponent(targetUrl));
-    }
-    return `${proxySetting}${encodeURIComponent(targetUrl)}`;
-  }
-
-  private async fetchWithProxy<T>(url: string, cacheKey: string, ttlMs: number): Promise<T> {
-    // Check Cache first
-    const cached = CacheManager.get<T>(cacheKey);
-    if (cached) return cached;
-
-    // Fetch
-    const proxiedUrl = this.getProxyUrl(url);
-    const response = await fetch(proxiedUrl, {
-      headers: {
-        "Accept": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-    }
-
-    const data = await response.json() as T;
-
-    // Save to Cache
-    CacheManager.set(cacheKey, data, ttlMs);
-    return data;
-  }
 
   private mapTeamSummary(t: any): TeamSummary {
     return {
@@ -91,7 +52,7 @@ export class NhlLeagueProvider implements LeagueProvider {
     }
 
     try {
-      const res = await this.fetchWithProxy<ScheduleResponse>(url, cacheKey, ttl);
+      const res = await fetchWithProxy<ScheduleResponse>(url, cacheKey, ttl);
       if (!res.gameWeek || res.gameWeek.length === 0) return [];
       
       const day = res.gameWeek.find(d => d.date === dateStr);
@@ -125,7 +86,7 @@ export class NhlLeagueProvider implements LeagueProvider {
     const ttl = 1000 * 60 * 15; // 15 mins (if live/pre) or cached permanently inside loader if FINAL
 
     try {
-      const g = await this.fetchWithProxy<any>(url, cacheKey, ttl);
+      const g = await fetchWithProxy<any>(url, cacheKey, ttl);
       
       // If game is finished, we can overwrite cache with higher TTL (indefinite)
       if (g.gameState === "FINAL" || g.gameState === "OFF") {
@@ -171,7 +132,7 @@ export class NhlLeagueProvider implements LeagueProvider {
     const ttl = 1000 * 60 * 60 * 24; // 24 hours
 
     try {
-      const data = await this.fetchWithProxy<any>(url, cacheKey, ttl);
+      const data = await fetchWithProxy<any>(url, cacheKey, ttl);
 
       const mapPlayer = (p: any) => ({
         id: p.id,
@@ -211,7 +172,7 @@ export class NhlLeagueProvider implements LeagueProvider {
     }
 
     try {
-      const res = await this.fetchWithProxy<StandingsResponse>(url, cacheKey, ttl);
+      const res = await fetchWithProxy<StandingsResponse>(url, cacheKey, ttl);
       return (res.standings || []).map(t => ({
         teamAbbrev: t.teamAbbrev?.default || t.teamAbbrev,
         teamName: t.teamName?.default || "",
@@ -285,8 +246,8 @@ export class NhlLeagueProvider implements LeagueProvider {
     const teamListUrl = "https://api.nhle.com/stats/rest/en/team";
 
     const [summary, teamList] = await Promise.all([
-      this.fetchWithProxy<{ data: any[] }>(summaryUrl, `nhl_team_summary_${seasonId}`, 1000 * 60 * 60 * 6),
-      this.fetchWithProxy<{ data: any[] }>(teamListUrl, "nhl_team_list", 1000 * 60 * 60 * 24 * 30)
+      fetchWithProxy<{ data: any[] }>(summaryUrl, `nhl_team_summary_${seasonId}`, 1000 * 60 * 60 * 6),
+      fetchWithProxy<{ data: any[] }>(teamListUrl, "nhl_team_list", 1000 * 60 * 60 * 24 * 30)
     ]);
 
     const idsInSummary = new Set(summary.data.map(r => r.teamId));
@@ -328,7 +289,7 @@ export class NhlLeagueProvider implements LeagueProvider {
 
     try {
       // Since ESPN news API has no CORS headers, we query through the same proxy
-      const data = await this.fetchWithProxy<EspnNewsResponse>(url, cacheKey, ttl);
+      const data = await fetchWithProxy<EspnNewsResponse>(url, cacheKey, ttl);
       if (!data.articles) return [];
 
       return data.articles.slice(0, 5).map(art => ({
@@ -352,7 +313,7 @@ export class NhlLeagueProvider implements LeagueProvider {
 
     try {
       const url = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams";
-      const data = await this.fetchWithProxy<any>(url, "espn_team_list", 1000 * 60 * 60 * 24 * 30);
+      const data = await fetchWithProxy<any>(url, "espn_team_list", 1000 * 60 * 60 * 24 * 30);
       const teams = data.sports?.[0]?.leagues?.[0]?.teams ?? [];
       for (const tItem of teams) {
         const team = tItem.team;

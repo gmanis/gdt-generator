@@ -36,6 +36,11 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 
 [HR][/HR]
 
+[B][SIZE=5]Media Tweets[/SIZE][/B]
+{{tweets}}
+
+[HR][/HR]
+
 [B][SIZE=5]Standings[/SIZE][/B]
 {{standings_table}}
 [/CENTER]`,
@@ -65,6 +70,11 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 
 ## Recent Quotes
 {{quotes}}
+
+---
+
+## Media Tweets
+{{tweets}}
 
 ---
 
@@ -102,6 +112,11 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 
   <h2 style="font-size: 24px; color: #111; margin-bottom: 15px;">Recent Quotes</h2>
   {{quotes}}
+
+  <hr style="border: 0; border-top: 1px solid #ccc; margin: 30px 0;" />
+
+  <h2 style="font-size: 24px; color: #111; margin-bottom: 15px;">Media Tweets</h2>
+  {{tweets}}
 
   <hr style="border: 0; border-top: 1px solid #ccc; margin: 30px 0;" />
 

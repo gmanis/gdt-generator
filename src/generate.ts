@@ -103,6 +103,11 @@ function buildValues(state: AppState, renderer: FormatRenderer): Record<string, 
     ? quotes.map(q => renderer.renderQuote(q.author, q.role, q.text)).join("\n\n")
     : renderer.renderItalic("No recent quotes available.");
 
+  // Media tweets selected for embedding
+  values["tweets"] = state.selectedTweets.length > 0
+    ? renderer.renderTweets(state.selectedTweets)
+    : renderer.renderItalic("No tweets selected.");
+
   return values;
 }
 

@@ -1,4 +1,4 @@
-import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, Quote } from "./types";
+import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, Quote, TweetSearchResult, TweetEmbed } from "./types";
 
 export const MOCK_STANDINGS: StandingsTeam[] = [
   // Atlantic Division
@@ -199,3 +199,51 @@ export const MOCK_QUOTES: Quote[] = [
     teamAbbrev: "BOS"
   }
 ];
+
+// Fictional demo-only handles (not real reporters) so the Media Tweets search/embed
+// flow can be exercised end-to-end without hitting the real search API or oEmbed.
+export const MOCK_TWEET_RESULTS: Record<string, TweetSearchResult[]> = {
+  NJD: [
+    {
+      url: "https://x.com/DevilsBeatDemo/status/1000000000000000001",
+      title: "Devils Beat Demo (@DevilsBeatDemo) on X",
+      snippet: "Keefe confirms Markstrom gets the start tonight against Boston. Lineup mostly steady heading into puck drop."
+    },
+    {
+      url: "https://x.com/DevilsBeatDemo/status/1000000000000000002",
+      title: "Devils Beat Demo (@DevilsBeatDemo) on X",
+      snippet: "Hughes line looked sharp at morning skate. Expect heavy minutes in a tight one tonight."
+    }
+  ],
+  BOS: [
+    {
+      url: "https://x.com/BruinsBeatDemo/status/2000000000000000001",
+      title: "Bruins Beat Demo (@BruinsBeatDemo) on X",
+      snippet: "Swayman in net for Boston. Montgomery still finalizing the fourth line ahead of puck drop."
+    }
+  ]
+};
+
+export const MOCK_TWEET_EMBEDS: Record<string, TweetEmbed> = {
+  "https://x.com/DevilsBeatDemo/status/1000000000000000001": {
+    url: "https://x.com/DevilsBeatDemo/status/1000000000000000001",
+    authorName: "Devils Beat Demo",
+    authorUrl: "https://x.com/DevilsBeatDemo",
+    text: "Keefe confirms Markstrom gets the start tonight against Boston. Lineup mostly steady heading into puck drop.",
+    html: `<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Keefe confirms Markstrom gets the start tonight against Boston. Lineup mostly steady heading into puck drop.</p>&mdash; Devils Beat Demo (@DevilsBeatDemo) <a href="https://x.com/DevilsBeatDemo/status/1000000000000000001">March 10, 2026</a></blockquote>`
+  },
+  "https://x.com/DevilsBeatDemo/status/1000000000000000002": {
+    url: "https://x.com/DevilsBeatDemo/status/1000000000000000002",
+    authorName: "Devils Beat Demo",
+    authorUrl: "https://x.com/DevilsBeatDemo",
+    text: "Hughes line looked sharp at morning skate. Expect heavy minutes in a tight one tonight.",
+    html: `<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Hughes line looked sharp at morning skate. Expect heavy minutes in a tight one tonight.</p>&mdash; Devils Beat Demo (@DevilsBeatDemo) <a href="https://x.com/DevilsBeatDemo/status/1000000000000000002">March 10, 2026</a></blockquote>`
+  },
+  "https://x.com/BruinsBeatDemo/status/2000000000000000001": {
+    url: "https://x.com/BruinsBeatDemo/status/2000000000000000001",
+    authorName: "Bruins Beat Demo",
+    authorUrl: "https://x.com/BruinsBeatDemo",
+    text: "Swayman in net for Boston. Montgomery still finalizing the fourth line ahead of puck drop.",
+    html: `<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Swayman in net for Boston. Montgomery still finalizing the fourth line ahead of puck drop.</p>&mdash; Bruins Beat Demo (@BruinsBeatDemo) <a href="https://x.com/BruinsBeatDemo/status/2000000000000000001">March 10, 2026</a></blockquote>`
+  }
+};

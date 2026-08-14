@@ -101,6 +101,31 @@
           </div>
         </div>
 
+        <!-- Media Tweets Card -->
+        <div class="card">
+          <div class="card-title">Media Tweets</div>
+
+          <div class="add-quote-form" style="grid-template-columns: 1fr auto;">
+            <input type="text" id="tweetSearchInput" data-ref="tweetSearchInput" placeholder="Search by handle, e.g. FriedgeHNIC">
+            <button data-ref="searchTweetsBtn" class="quick-paste-btn">Search</button>
+          </div>
+          <p class="info-text" style="margin-bottom:0.5rem;">Searches that handle's recent tweets for the current matchup.</p>
+
+          <div class="add-quote-form" style="grid-template-columns: 1fr auto; margin-bottom:0.75rem;">
+            <input type="text" id="tweetUrlInput" data-ref="tweetUrlInput" placeholder="...or paste a tweet URL directly">
+            <button data-ref="addTweetUrlBtn" class="quick-paste-btn">Add</button>
+          </div>
+
+          <div class="news-list" data-ref="tweetResultsContainer" style="max-height:160px; margin-bottom: 0.75rem;">
+            <!-- Search results injected here -->
+          </div>
+
+          <div class="section-label" style="margin-top:0;">Selected Tweets</div>
+          <div class="quotes-list" data-ref="selectedTweetsContainer" style="margin-top:0.5rem; margin-bottom:0;">
+            <p class="no-data" style="text-align:center">No tweets selected</p>
+          </div>
+        </div>
+
         <!-- News Feed Card -->
         <div class="card">
           <div class="card-title">Recent Team News (ESPN Feed)</div>
@@ -150,7 +175,7 @@
               id="templateBodyEditor"
               data-ref="templateBodyEditor"
               class="editor"
-              placeholder="Write your post template here… Use {{home_team}}, {{away_team}}, {{home_lineup}} (or {{home_lineup_images}} to include player photos), etc."
+              placeholder="Write your post template here… Use {{home_team}}, {{away_team}}, {{home_lineup}} (or {{home_lineup_images}} to include player photos), {{tweets}}, etc."
             ></textarea>
           </div>
         </div>

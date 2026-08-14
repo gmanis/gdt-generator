@@ -5,9 +5,10 @@ import { renderLineupSlots, parseProjectedLines, syncLineupUI } from "./lineup";
 import { generateThread, DEFAULT_TEMPLATES } from "./generate";
 import { CacheManager } from "./cache";
 import { MOCK_QUOTES } from "./mockData";
-import { Quote, NewsItem } from "./types";
+import { Quote, NewsItem, TweetSearchResult } from "./types";
 import { showToast, showLoading, hideLoading, openModal, closeModal } from "./ui";
 import { NHL_TEAMS } from "./teams";
+import { searchTweets, fetchTweetEmbed, isTweetUrl } from "./tweets";
 
 const provider = new NhlLeagueProvider();
 
@@ -292,6 +293,118 @@ function renderQuotesList(refs: AppRefs): void {
   });
 }
 
+// ─── Media Tweets ─────────────────────────────────────────────────────────────
+
+function loadTweets(): void {
+  state.selectedTweets = JSON.parse(localStorage.getItem("gtg_tweets") ?? "[]");
+}
+
+function saveTweets(): void {
+  localStorage.setItem("gtg_tweets", JSON.stringify(state.selectedTweets));
+}
+
+async function searchAndRenderTweets(refs: AppRefs): Promise<void> {
+  const handle = refs.tweetSearchInput.value.trim();
+  if (!handle) { showToast(refs, "Enter a handle to search!"); return; }
+
+  const game = state.selectedGame;
+  const teamHint = game ? `${game.awayTeam.commonName} ${game.homeTeam.commonName}` : "";
+  const demoTeamAbbrev = game?.homeTeam.abbrev ?? game?.awayTeam.abbrev ?? "";
+
+  refs.tweetResultsContainer.innerHTML = `<p class="no-data">Searching…</p>`;
+  try {
+    const results = await searchTweets(handle, state.demoMode ? demoTeamAbbrev : teamHint, state.demoMode);
+    renderTweetResults(refs, results);
+    if (results.length === 0) showToast(refs, "No tweets found for that handle.");
+  } catch (e) {
+    console.error("searchTweets error:", e);
+    refs.tweetResultsContainer.innerHTML = `<p class="no-data">${(e as Error).message}</p>`;
+  }
+}
+
+function renderTweetResults(refs: AppRefs, results: TweetSearchResult[]): void {
+  refs.tweetResultsContainer.innerHTML = "";
+
+  if (results.length === 0) {
+    refs.tweetResultsContainer.innerHTML = `<p class="no-data">No results.</p>`;
+    return;
+  }
+
+  results.forEach(r => {
+    const item = document.createElement("div");
+    item.className = "tweet-result-item";
+
+    const p = document.createElement("p");
+    p.innerHTML = `<strong>${r.title}</strong>${r.snippet}`;
+    item.appendChild(p);
+
+    const addBtn = document.createElement("button");
+    addBtn.className = "add-tweet-btn";
+    addBtn.textContent = "Add";
+    addBtn.addEventListener("click", () => addTweet(refs, r.url));
+
+    item.appendChild(addBtn);
+    refs.tweetResultsContainer.appendChild(item);
+  });
+}
+
+async function addTweet(refs: AppRefs, url: string): Promise<void> {
+  if (state.selectedTweets.some(t => t.url === url)) { showToast(refs, "Already added!"); return; }
+
+  showLoading(refs, "Fetching tweet…");
+  try {
+    const embed = await fetchTweetEmbed(url, state.demoMode);
+    state.selectedTweets.push(embed);
+    saveTweets();
+    renderSelectedTweets(refs);
+    showToast(refs, "Tweet added!");
+  } catch (e) {
+    console.error("fetchTweetEmbed error:", e);
+    showToast(refs, "Couldn't fetch that tweet — check the URL.");
+  } finally {
+    hideLoading(refs);
+  }
+}
+
+function removeTweet(refs: AppRefs, url: string): void {
+  state.selectedTweets = state.selectedTweets.filter(t => t.url !== url);
+  saveTweets();
+  renderSelectedTweets(refs);
+  showToast(refs, "Tweet removed!");
+}
+
+function renderSelectedTweets(refs: AppRefs): void {
+  refs.selectedTweetsContainer.innerHTML = "";
+
+  if (state.selectedTweets.length === 0) {
+    refs.selectedTweetsContainer.innerHTML = `<p class="no-data" style="text-align:center">No tweets selected</p>`;
+    return;
+  }
+
+  state.selectedTweets.forEach(t => {
+    const item = document.createElement("div");
+    item.className = "quote-item";
+
+    const body = document.createElement("div");
+    body.className = "quote-content";
+    body.textContent = `"${t.text}"`;
+
+    const cite = document.createElement("cite");
+    cite.textContent = `— ${t.authorName}`;
+    body.appendChild(cite);
+
+    const del = document.createElement("button");
+    del.className = "delete-quote-btn";
+    del.innerHTML = "&times;";
+    del.title = "Remove Tweet";
+    del.addEventListener("click", () => removeTweet(refs, t.url));
+
+    item.appendChild(body);
+    item.appendChild(del);
+    refs.selectedTweetsContainer.appendChild(item);
+  });
+}
+
 // ─── App bootstrap ────────────────────────────────────────────────────────────
 
 function init(): void {
@@ -306,8 +419,10 @@ function init(): void {
   refs.datePicker.value = initialDate;
   state.currentDate     = initialDate;
 
-  // Load quotes
+  // Load quotes and previously-selected tweets
   loadQuotes(refs);
+  loadTweets();
+  renderSelectedTweets(refs);
 
   // ── Event listeners ──────────────────────────────────────────────────────
 
@@ -371,6 +486,16 @@ function init(): void {
 
   // Quotes
   refs.addQuoteBtn.addEventListener("click", () => addQuote(refs));
+
+  // Media tweets
+  refs.searchTweetsBtn.addEventListener("click", () => searchAndRenderTweets(refs));
+  refs.addTweetUrlBtn.addEventListener("click", () => {
+    const url = refs.tweetUrlInput.value.trim();
+    if (!url) { showToast(refs, "Paste a tweet URL first!"); return; }
+    if (!isTweetUrl(url)) { showToast(refs, "That doesn't look like a tweet URL."); return; }
+    addTweet(refs, url);
+    refs.tweetUrlInput.value = "";
+  });
 
   // Lineup paste import
   refs.parseLineupBtn.addEventListener("click", () => {
