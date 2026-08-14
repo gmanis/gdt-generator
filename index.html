@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Thread Generator</title>
+  <meta name="description" content="Generate formatted game discussion threads for forums with live NHL data — lineups, standings, TV listings, and more.">
+  <link rel="stylesheet" href="/src/index.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="logo-section">
+        <h1>Game Thread Generator <span>Beta</span></h1>
+      </div>
+      <div class="header-controls">
+        <div class="toggle-container">
+          <label for="demoModeToggle">Demo Mode</label>
+          <label class="switch">
+            <input type="checkbox" id="demoModeToggle" data-ref="demoModeToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <button data-ref="openSettingsBtn" class="settings-btn" title="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard">
+      <!-- Left Panel: Configuration & Builders -->
+      <div class="panel left-panel">
+        
+        <!-- Game Selector Card -->
+        <div class="card">
+          <div class="card-title">Game Selection</div>
+          <div class="selector-group">
+            <div class="field">
+              <label for="datePicker">Date</label>
+              <input type="date" id="datePicker" data-ref="datePicker">
+            </div>
+            <div class="field">
+              <label for="gameSelect">Matchup</label>
+              <select id="gameSelect" data-ref="gameSelect">
+                <option value="">-- Load Games First --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lineup Builder Card -->
+        <div class="card">
+          <div class="card-title">
+            Projected Lineups
+            <button data-ref="openImportModalBtn" class="quick-paste-btn" style="display:none;">Paste DailyFaceoff Lines</button>
+          </div>
+          
+          <div class="lineup-container">
+            <!-- Away Team Lineup -->
+            <div class="team-builder-card">
+              <div class="team-header">
+                <img data-ref="awayTeamLogo" src="" alt="" style="display:none;">
+                <span data-ref="awayTeamName">Away Team</span>
+              </div>
+              <div data-ref="awayLineupSlots" class="line-builder-section">
+                <!-- JS injects lineup selects here -->
+              </div>
+              <div class="quick-paste-box">
+                <p>Scratches:</p>
+                <input type="text" id="awayScratchesInput" data-ref="awayScratchesInput" placeholder="Scratches (comma-separated)">
+              </div>
+            </div>
+
+            <!-- Home Team Lineup -->
+            <div class="team-builder-card">
+              <div class="team-header">
+                <img data-ref="homeTeamLogo" src="" alt="" style="display:none;">
+                <span data-ref="homeTeamName">Home Team</span>
+              </div>
+              <div data-ref="homeLineupSlots" class="line-builder-section">
+                <!-- JS injects lineup selects here -->
+              </div>
+              <div class="quick-paste-box">
+                <p>Scratches:</p>
+                <input type="text" id="homeScratchesInput" data-ref="homeScratchesInput" placeholder="Scratches (comma-separated)">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quotes Manager Card -->
+        <div class="card">
+          <div class="card-title">Recent Comments &amp; Quotes</div>
+          
+          <div class="add-quote-form">
+            <input type="text" id="quoteAuthorInput" data-ref="quoteAuthorInput" placeholder="Author (e.g. Coach Keefe)">
+            <input type="text" id="quoteTextInput"   data-ref="quoteTextInput"   placeholder="Quote comment...">
+            <button data-ref="addQuoteBtn" class="quick-paste-btn">Add Quote</button>
+          </div>
+
+          <div class="quotes-list" data-ref="quotesListContainer">
+            <!-- Quotes injected here -->
+          </div>
+        </div>
+
+        <!-- News Feed Card -->
+        <div class="card">
+          <div class="card-title">Recent Team News (ESPN Feed)</div>
+          <div class="news-widget-container">
+            <div>
+              <div class="news-team-title" data-ref="awayNewsTitle">Away News</div>
+              <div class="news-list" data-ref="awayNewsContainer">
+                <p class="no-data">No news loaded</p>
+              </div>
+            </div>
+            <div>
+              <div class="news-team-title" data-ref="homeNewsTitle">Home News</div>
+              <div class="news-list" data-ref="homeNewsContainer">
+                <p class="no-data">No news loaded</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Panel: Editors & Previews -->
+      <div class="panel right-panel">
+        
+        <!-- Tabbed view -->
+        <div class="preview-tabs">
+          <button class="tab-btn active" data-tab="editor">Template Editor</button>
+          <button class="tab-btn" data-tab="preview">Visual Preview</button>
+          <button class="tab-btn" data-tab="raw">Generated Code</button>
+        </div>
+
+        <!-- Editor Tab -->
+        <div id="tabContent_editor" class="tab-content card template-editor-card">
+          <div class="template-actions">
+            <div class="field" style="width: 250px;">
+              <label for="templateStyleSelect">Output Format</label>
+              <select id="templateStyleSelect" data-ref="templateStyleSelect">
+                <option value="bbcode">XenForo BBCode Style</option>
+                <option value="markdown">Reddit Markdown Style</option>
+                <option value="html">HTML Blog Style</option>
+              </select>
+            </div>
+            <button data-ref="resetTemplateBtn" class="secondary-btn">Reset to Default</button>
+          </div>
+          <div class="textarea-container">
+            <textarea
+              id="templateBodyEditor"
+              data-ref="templateBodyEditor"
+              class="editor"
+              placeholder="Write your post template here… Use {{home_team}}, {{away_team}}, {{home_lineup}}, etc."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Visual Preview Tab -->
+        <div id="tabContent_preview" class="tab-content" style="display:none;">
+          <div class="card">
+            <div class="card-title">Live Thread Preview</div>
+            <div data-ref="previewRenderedContainer" class="preview-rendered-container">
+              <!-- Rendered preview HTML goes here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Raw Output Tab -->
+        <div id="tabContent_raw" class="tab-content output-card card" style="display:none;">
+          <div class="output-header">
+            <span style="font-weight:700;">Copy Thread Code</span>
+            <button data-ref="copyToClipboardBtn" class="secondary-btn">Copy to Clipboard</button>
+          </div>
+          <div data-ref="outputContainer" class="output-container">
+            <!-- Raw generated code text goes here -->
+          </div>
+        </div>
+
+        <!-- Generate Action Card -->
+        <div class="card" style="display:flex; justify-content:flex-end; align-items:center; gap:1rem;">
+          <button data-ref="generateThreadBtn" class="primary-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Generate Discussion Thread
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div data-ref="settingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        Settings
+        <button data-ref="closeSettingsModal" class="close-modal">&times;</button>
+      </div>
+      <div class="field" style="margin-bottom:1rem;">
+        <label for="corsProxyInput">CORS Proxy URL (leave blank to disable)</label>
+        <input type="text" id="corsProxyInput" data-ref="corsProxyInput" placeholder="https://corsproxy.io/?">
+        <p class="info-text">Must prepend to target URLs. Default is <strong>https://corsproxy.io/?</strong></p>
+      </div>
+      
+      <div style="margin:1.5rem 0; border-top:1px solid var(--border-color); padding-top:1rem;">
+        <h4 style="font-size:0.9rem; margin-bottom:0.5rem;">Cache</h4>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span data-ref="cacheStatsText" style="font-size:0.85rem;">0 items cached (0 KB)</span>
+          <button data-ref="clearCacheBtn" class="secondary-btn danger-text">Clear Cache</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button data-ref="saveSettingsBtn" class="primary-btn" style="padding:0.5rem 1rem; font-size:0.85rem;">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Lineup Modal -->
+  <div data-ref="importModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        Import DailyFaceoff Projected Lines
+        <button data-ref="closeImportModal" class="close-modal">&times;</button>
+      </div>
+      <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1rem;">
+        Paste plain-text projected lines (e.g. from Daily Faceoff or Twitter). Names are fuzzy-matched against the roster.
+      </p>
+      <textarea data-ref="quickPasteTextarea" placeholder="Example:
+Artemi Panarin - Vincent Trocheck - Alexis Lafreniere
+Chris Kreider - Mika Zibanejad - Reilly Smith
+K'Andre Miller - Adam Fox
+Igor Shesterkin"></textarea>
+      
+      <div class="field" style="margin:1rem 0;">
+        <label for="importTeamSelect">Target Team</label>
+        <select id="importTeamSelect" data-ref="importTeamSelect">
+          <option value="away">Away Team</option>
+          <option value="home">Home Team</option>
+        </select>
+      </div>
+
+      <div class="modal-footer">
+        <button data-ref="parseLineupBtn" class="primary-btn" style="padding:0.5rem 1rem; font-size:0.85rem;">Parse &amp; Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div data-ref="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <span data-ref="loadingText" style="font-weight:600; font-size:1rem;">Fetching data…</span>
+  </div>
+
+  <!-- Toast Notification -->
+  <div data-ref="toast" class="toast">
+    <span data-ref="toastText">Action completed!</span>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+import { NhlLeagueProvider } from "./leagues";
+import { collectRefs, AppRefs } from "./refs";
+import { state } from "./state";
+import { renderLineupSlots, parseProjectedLines, syncLineupUI } from "./lineup";
+import { generateThread, DEFAULT_TEMPLATES } from "./generate";
+import { CacheManager } from "./cache";
+import { MOCK_QUOTES } from "./mockData";
+import { Quote, NewsItem } from "./types";
+import { showToast, showLoading, hideLoading, openModal, closeModal } from "./ui";
+
+const provider = new NhlLeagueProvider();
+
+// Demo mode always browses this fixed date so the mock schedule resolves.
+const DEMO_DATE = "2026-03-10";
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
+function loadSettings(refs: AppRefs): void {
+  const savedProxy = localStorage.getItem("gtg_settings_cors_proxy");
+  refs.corsProxyInput.value = savedProxy ?? "https://corsproxy.io/?";
+
+  if (!localStorage.getItem("gtg_settings_templates")) {
+    localStorage.setItem("gtg_settings_templates", JSON.stringify(DEFAULT_TEMPLATES));
+  }
+
+  const savedStyle = localStorage.getItem("gtg_settings_current_template") ?? "bbcode";
+  refs.templateStyleSelect.value = savedStyle;
+  loadTemplateForStyle(refs);
+}
+
+function loadTemplateForStyle(refs: AppRefs): void {
+  const style = refs.templateStyleSelect.value;
+  localStorage.setItem("gtg_settings_current_template", style);
+  const saved = localStorage.getItem("gtg_settings_templates");
+  refs.templateBodyEditor.value = saved
+    ? (JSON.parse(saved)[style] ?? DEFAULT_TEMPLATES[style])
+    : DEFAULT_TEMPLATES[style];
+}
+
+function saveSettings(refs: AppRefs): void {
+  localStorage.setItem("gtg_settings_cors_proxy", refs.corsProxyInput.value.trim());
+  showToast(refs, "Settings saved!");
+  closeModal(refs.settingsModal);
+}
+
+function resetTemplate(refs: AppRefs): void {
+  const style = refs.templateStyleSelect.value;
+  if (!confirm(`Reset the ${style} template to default?`)) return;
+  refs.templateBodyEditor.value = DEFAULT_TEMPLATES[style];
+  const saved = localStorage.getItem("gtg_settings_templates");
+  const templates = saved ? JSON.parse(saved) : {};
+  templates[style] = DEFAULT_TEMPLATES[style];
+  localStorage.setItem("gtg_settings_templates", JSON.stringify(templates));
+  showToast(refs, "Template reset!");
+}
+
+function refreshCacheStats(refs: AppRefs): void {
+  const { count, bytes } = CacheManager.getCacheStats();
+  refs.cacheStatsText.textContent = `${count} items cached (${(bytes / 1024).toFixed(1)} KB)`;
+}
+
+function clearCache(refs: AppRefs): void {
+  CacheManager.clear();
+  refreshCacheStats(refs);
+  showToast(refs, "Cache cleared!");
+}
+
+// ─── Team display helpers ─────────────────────────────────────────────────────
+
+function clearGameDetails(refs: AppRefs): void {
+  refs.awayTeamName.textContent = "Away Team";
+  refs.homeTeamName.textContent = "Home Team";
+  refs.awayTeamLogo.style.display = "none";
+  refs.homeTeamLogo.style.display = "none";
+  refs.awayNewsContainer.innerHTML = `<p class="no-data">No news loaded</p>`;
+  refs.homeNewsContainer.innerHTML = `<p class="no-data">No news loaded</p>`;
+  refs.awayLineupSlots.innerHTML = "";
+  refs.homeLineupSlots.innerHTML = "";
+}
+
+// ─── Data loading ─────────────────────────────────────────────────────────────
+
+async function loadGamesList(refs: AppRefs): Promise<void> {
+  showLoading(refs, "Loading schedule…");
+  try {
+    state.games = await provider.fetchGames(state.currentDate, state.demoMode);
+    refs.gameSelect.innerHTML = "";
+
+    if (state.games.length === 0) {
+      const opt = document.createElement("option");
+      opt.textContent = "-- No games scheduled --";
+      refs.gameSelect.appendChild(opt);
+      state.selectedGame = null;
+      refs.openImportModalBtn.style.display = "none";
+      clearGameDetails(refs);
+    } else {
+      state.games.forEach((game, idx) => {
+        const opt = document.createElement("option");
+        opt.value = String(game.id);
+        opt.textContent = `${game.awayTeam.abbrev} @ ${game.homeTeam.abbrev} (${game.venue})`;
+        if (idx === 0) opt.selected = true;
+        refs.gameSelect.appendChild(opt);
+      });
+      state.selectedGame = state.games[0];
+      refs.openImportModalBtn.style.display = "block";
+      await loadSelectedGameDetails(refs);
+    }
+  } catch (e) {
+    console.error(e);
+    showToast(refs, "Error loading schedule!");
+  } finally {
+    hideLoading(refs);
+    refreshCacheStats(refs);
+  }
+}
+
+async function loadSelectedGameDetails(refs: AppRefs): Promise<void> {
+  if (!state.selectedGame) return;
+  const game = state.selectedGame;
+
+  refs.awayTeamName.textContent = `${game.awayTeam.placeName} ${game.awayTeam.commonName}`;
+  refs.homeTeamName.textContent = `${game.homeTeam.placeName} ${game.homeTeam.commonName}`;
+  refs.awayNewsTitle.textContent = `${game.awayTeam.abbrev} News`;
+  refs.homeNewsTitle.textContent = `${game.homeTeam.abbrev} News`;
+
+  const setLogo = (el: HTMLImageElement, url?: string) => {
+    el.style.display = url ? "block" : "none";
+    if (url) el.src = url;
+  };
+  setLogo(refs.awayTeamLogo, game.awayTeam.logo);
+  setLogo(refs.homeTeamLogo, game.homeTeam.logo);
+
+  try {
+    const [rosterAway, rosterHome] = await Promise.all([
+      provider.fetchTeamRoster(game.awayTeam.abbrev, state.demoMode),
+      provider.fetchTeamRoster(game.homeTeam.abbrev, state.demoMode),
+    ]);
+    state.rosters.away = rosterAway;
+    state.rosters.home = rosterHome;
+    renderLineupSlots("away", rosterAway, refs.awayLineupSlots, state);
+    renderLineupSlots("home", rosterHome, refs.homeLineupSlots, state);
+
+    state.standings = await provider.fetchStandings(state.demoMode);
+
+    const [statsAway, statsHome] = await Promise.all([
+      provider.fetchTeamStats(game.awayTeam.abbrev, state.standings, state.demoMode),
+      provider.fetchTeamStats(game.homeTeam.abbrev, state.standings, state.demoMode),
+    ]);
+    state.stats.away = statsAway;
+    state.stats.home = statsHome;
+
+    const [newsAway, newsHome] = await Promise.all([
+      provider.fetchTeamNews(game.awayTeam.abbrev, state.demoMode),
+      provider.fetchTeamNews(game.homeTeam.abbrev, state.demoMode),
+    ]);
+    renderNews(refs, "away", newsAway);
+    renderNews(refs, "home", newsHome);
+  } catch (e) {
+    console.error("Error loading game details:", e);
+    showToast(refs, "Failed loading rosters or standings!");
+  }
+}
+
+// ─── News ─────────────────────────────────────────────────────────────────────
+
+function renderNews(refs: AppRefs, team: "away" | "home", news: NewsItem[]): void {
+  const container = team === "away" ? refs.awayNewsContainer : refs.homeNewsContainer;
+  container.innerHTML = "";
+
+  if (news.length === 0) {
+    container.innerHTML = `<p class="no-data">No news found</p>`;
+    return;
+  }
+
+  news.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "news-item";
+
+    const h4 = document.createElement("h4");
+    h4.textContent = item.headline;
+    card.appendChild(h4);
+
+    const p = document.createElement("p");
+    p.textContent = item.description ?? "No summary available.";
+    card.appendChild(p);
+
+    card.addEventListener("click", () => {
+      refs.quoteAuthorInput.value = item.byline ?? "ESPN News";
+      refs.quoteTextInput.value   = item.description ?? item.headline;
+      showToast(refs, "Copied to Quote Creator!");
+      refs.quoteAuthorInput.scrollIntoView({ behavior: "smooth" });
+    });
+
+    container.appendChild(card);
+  });
+}
+
+// ─── Quotes ───────────────────────────────────────────────────────────────────
+
+function loadQuotes(refs: AppRefs): void {
+  state.quotes = state.demoMode
+    ? [...MOCK_QUOTES]
+    : JSON.parse(localStorage.getItem("gtg_quotes") ?? "[]");
+  renderQuotesList(refs);
+}
+
+function saveQuotes(): void {
+  localStorage.setItem("gtg_quotes", JSON.stringify(state.quotes));
+}
+
+function addQuote(refs: AppRefs): void {
+  const author = refs.quoteAuthorInput.value.trim();
+  const text   = refs.quoteTextInput.value.trim();
+  if (!author || !text) { showToast(refs, "Fill in both Author and Quote fields!"); return; }
+
+  const quote: Quote = {
+    id:         crypto.randomUUID(),
+    author,
+    role:       "",
+    text,
+    teamAbbrev: state.selectedGame?.awayTeam.abbrev ?? "",
+  };
+  state.quotes.push(quote);
+  saveQuotes();
+  renderQuotesList(refs);
+  refs.quoteTextInput.value = "";
+  showToast(refs, "Quote added!");
+}
+
+function deleteQuote(refs: AppRefs, id: string): void {
+  state.quotes = state.quotes.filter(q => q.id !== id);
+  saveQuotes();
+  renderQuotesList(refs);
+  showToast(refs, "Quote deleted!");
+}
+
+function renderQuotesList(refs: AppRefs): void {
+  refs.quotesListContainer.innerHTML = "";
+
+  if (state.quotes.length === 0) {
+    refs.quotesListContainer.innerHTML = `<p class="no-data" style="text-align:center">No quotes yet</p>`;
+    return;
+  }
+
+  state.quotes.forEach(q => {
+    const item = document.createElement("div");
+    item.className = "quote-item";
+
+    const body = document.createElement("div");
+    body.className = "quote-content";
+    body.textContent = `"${q.text}"`;
+
+    const cite = document.createElement("cite");
+    cite.textContent = `— ${q.author}${q.teamAbbrev ? ` (${q.teamAbbrev})` : ""}`;
+    body.appendChild(cite);
+
+    const del = document.createElement("button");
+    del.className = "delete-quote-btn";
+    del.innerHTML = "&times;";
+    del.title = "Delete Quote";
+    del.addEventListener("click", () => deleteQuote(refs, q.id));
+
+    item.appendChild(body);
+    item.appendChild(del);
+    refs.quotesListContainer.appendChild(item);
+  });
+}
+
+// ─── App bootstrap ────────────────────────────────────────────────────────────
+
+function init(): void {
+  const refs = collectRefs();
+
+  // Settings
+  loadSettings(refs);
+  refreshCacheStats(refs);
+
+  // Initial date — use a demo date so the mock schedule resolves
+  refs.datePicker.value = DEMO_DATE;
+  state.currentDate     = DEMO_DATE;
+
+  // Load quotes
+  loadQuotes(refs);
+
+  // ── Event listeners ──────────────────────────────────────────────────────
+
+  // Demo toggle
+  refs.demoModeToggle.addEventListener("change", async () => {
+    state.demoMode = refs.demoModeToggle.checked;
+    const date = state.demoMode
+      ? "2026-03-10"
+      : new Date().toISOString().split("T")[0];
+    refs.datePicker.value = date;
+    state.currentDate     = date;
+    loadQuotes(refs);
+    await loadGamesList(refs);
+  });
+
+  // Date picker
+  refs.datePicker.addEventListener("change", async () => {
+    state.currentDate = refs.datePicker.value;
+    await loadGamesList(refs);
+  });
+
+  // Game selector
+  refs.gameSelect.addEventListener("change", async () => {
+    const id   = parseInt(refs.gameSelect.value, 10);
+    const game = state.games.find(g => g.id === id);
+    if (!game) return;
+    state.selectedGame = game;
+    showLoading(refs, "Loading game data…");
+    try { await loadSelectedGameDetails(refs); }
+    finally { hideLoading(refs); }
+  });
+
+  // Modals
+  refs.openSettingsBtn.addEventListener("click",   () => openModal(refs.settingsModal));
+  refs.closeSettingsModal.addEventListener("click",() => closeModal(refs.settingsModal));
+  refs.openImportModalBtn.addEventListener("click",() => openModal(refs.importModal));
+  refs.closeImportModal.addEventListener("click",  () => closeModal(refs.importModal));
+
+  // Settings actions
+  refs.saveSettingsBtn.addEventListener("click", () => saveSettings(refs));
+  refs.clearCacheBtn.addEventListener("click",   () => clearCache(refs));
+
+  // Template
+  refs.templateStyleSelect.addEventListener("change", () => loadTemplateForStyle(refs));
+  refs.resetTemplateBtn.addEventListener("click",     () => resetTemplate(refs));
+
+  // Scratches
+  refs.awayScratchesInput.addEventListener("input", e => {
+    state.lineups.away.scratches = (e.target as HTMLInputElement).value
+      .split(",").map(s => s.trim()).filter(Boolean);
+  });
+  refs.homeScratchesInput.addEventListener("input", e => {
+    state.lineups.home.scratches = (e.target as HTMLInputElement).value
+      .split(",").map(s => s.trim()).filter(Boolean);
+  });
+
+  // Quotes
+  refs.addQuoteBtn.addEventListener("click", () => addQuote(refs));
+
+  // Lineup paste import
+  refs.parseLineupBtn.addEventListener("click", () => {
+    const rawText = refs.quickPasteTextarea.value.trim();
+    const team    = refs.importTeamSelect.value as "away" | "home";
+    if (!rawText) { alert("Paste projected lines first!"); return; }
+
+    const { fLines, dPairs, goalies } = parseProjectedLines(rawText, team, state);
+    const container = team === "away" ? refs.awayLineupSlots : refs.homeLineupSlots;
+    syncLineupUI(container, state.lineups[team]);
+    showToast(refs, `Imported ${fLines} F lines, ${dPairs} D pairs, ${goalies} goalies!`);
+    closeModal(refs.importModal);
+  });
+
+  // Generate + copy
+  refs.generateThreadBtn.addEventListener("click",  () => generateThread(refs, state));
+  refs.copyToClipboardBtn.addEventListener("click", () => {
+    const text = refs.outputContainer.textContent ?? "";
+    if (!text) { alert("Generate a thread first!"); return; }
+    navigator.clipboard.writeText(text)
+      .then(() => showToast(refs, "Copied to clipboard!"))
+      .catch(() => alert("Copy failed — copy manually from the box."));
+  });
+
+  // Tab switcher
+  document.querySelectorAll<HTMLButtonElement>(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const tab = btn.getAttribute("data-tab") ?? "editor";
+      document.querySelectorAll<HTMLElement>(".tab-content").forEach(el => {
+        el.style.display = "none";
+      });
+      const panel = document.getElementById(`tabContent_${tab}`);
+      if (panel) panel.style.display = tab === "editor" ? "flex" : "block";
+    });
+  });
+
+  // Kick off initial data load
+  handleDemoToggle(refs);
+}
+
+async function handleDemoToggle(refs: AppRefs): Promise<void> {
+  state.demoMode = refs.demoModeToggle.checked;
+  await loadGamesList(refs);
+}
+
+window.addEventListener("DOMContentLoaded", init);
