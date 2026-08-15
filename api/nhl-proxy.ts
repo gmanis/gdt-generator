@@ -17,17 +17,23 @@ function jsonResponse(body: unknown, status: number, extraHeaders?: Record<strin
 // season-specific URL. Vercel's Edge Runtime doesn't reliably auto-follow that
 // redirect (confirmed: identical requests succeed outside the edge runtime),
 // so follow it manually instead of trusting fetch()'s default redirect handling.
-async function fetchFollowingRedirects(url: string, headers: Record<string, string>, maxRedirects = 5): Promise<Response> {
+async function fetchFollowingRedirects(
+  url: string,
+  headers: Record<string, string>,
+  maxRedirects = 5,
+): Promise<{ res: Response; chain: string[] }> {
   let currentUrl = url;
+  const chain = [url];
   for (let i = 0; i < maxRedirects; i++) {
     const res = await fetch(currentUrl, { headers, redirect: 'manual' });
     if (res.status >= 300 && res.status < 400) {
       const location = res.headers.get('location');
-      if (!location) return res;
+      if (!location) return { res, chain };
       currentUrl = new URL(location, currentUrl).toString();
+      chain.push(currentUrl);
       continue;
     }
-    return res;
+    return { res, chain };
   }
   throw new Error(`Too many redirects fetching ${url}`);
 }
@@ -47,13 +53,21 @@ export default async function handler(request: Request) {
       return jsonResponse({ error: 'Hostname not allowed' }, 403);
     }
 
-    const fetchRes = await fetchFollowingRedirects(url, {
+    const { res: fetchRes, chain } = await fetchFollowingRedirects(url, {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       'Accept': 'application/json'
     });
 
     if (!fetchRes.ok) {
-      return jsonResponse({ error: `Target server returned ${fetchRes.status} ${fetchRes.statusText}` }, fetchRes.status);
+      // TEMPORARY: debug info to diagnose a Vercel-specific 404 on paths that
+      // 200 from every other vantage point tested so far. Remove once solved.
+      const bodyText = await fetchRes.text().catch(() => '');
+      return jsonResponse({
+        error: `Target server returned ${fetchRes.status} ${fetchRes.statusText}`,
+        debugChain: chain,
+        debugFinalHeaders: Object.fromEntries(fetchRes.headers.entries()),
+        debugBody: bodyText.slice(0, 500),
+      }, fetchRes.status);
     }
 
     const data = await fetchRes.json();
