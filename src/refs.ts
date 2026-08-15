@@ -33,6 +33,7 @@ export interface AppRefs {
   selectedTweetsContainer: HTMLDivElement;
 
   // News feed
+  newsFeedCard: HTMLDivElement;
   awayNewsContainer: HTMLDivElement;
   homeNewsContainer: HTMLDivElement;
   awayNewsTitle: HTMLElement;

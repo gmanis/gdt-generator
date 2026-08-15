@@ -21,6 +21,22 @@ function dateForMode(demoMode: boolean): string {
   return demoMode ? DEMO_DATE : new Date().toISOString().split("T")[0];
 }
 
+/**
+ * ESPN's news API and DailyFaceoff both block requests from Vercel's IP
+ * ranges with a 403 — confirmed real, not a bug on our end, and not something
+ * fixable short of a paid bot-bypass proxy. Rather than let users hit an
+ * always-fails button/always-empty card in production, hide/disable them
+ * outside demo mode. Both still work fully in demo mode.
+ */
+function updateFeatureAvailability(refs: AppRefs): void {
+  refs.newsFeedCard.style.display = state.demoMode ? "" : "none";
+
+  refs.fetchDailyFaceoffBtn.disabled = !state.demoMode;
+  refs.fetchDailyFaceoffBtn.title = state.demoMode
+    ? ""
+    : "Unavailable outside Demo Mode — DailyFaceoff blocks automated requests from this deployment's host. Use the paste option below instead.";
+}
+
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 function loadSettings(refs: AppRefs): void {
@@ -224,10 +240,15 @@ async function loadSelectedGameDetails(refs: AppRefs): Promise<void> {
 
     // Best-effort: auto-populate projected lines from DailyFaceoff for both
     // teams, falling back to the roster-order auto-fill above if it fails.
-    await Promise.all([
-      autoFetchDailyFaceoffLines(refs, "away", game.awayTeam.abbrev),
-      autoFetchDailyFaceoffLines(refs, "home", game.homeTeam.abbrev),
-    ]);
+    // Skipped entirely outside demo mode — DailyFaceoff blocks this
+    // deployment's requests outright, so it would just be a guaranteed-failed
+    // round trip every time (see updateFeatureAvailability).
+    if (state.demoMode) {
+      await Promise.all([
+        autoFetchDailyFaceoffLines(refs, "away", game.awayTeam.abbrev),
+        autoFetchDailyFaceoffLines(refs, "home", game.homeTeam.abbrev),
+      ]);
+    }
 
     state.standings = await provider.fetchStandings(state.demoMode);
 
@@ -238,12 +259,16 @@ async function loadSelectedGameDetails(refs: AppRefs): Promise<void> {
     state.stats.away = statsAway;
     state.stats.home = statsHome;
 
-    const [newsAway, newsHome] = await Promise.all([
-      provider.fetchTeamNews(game.awayTeam.abbrev, state.demoMode),
-      provider.fetchTeamNews(game.homeTeam.abbrev, state.demoMode),
-    ]);
-    renderNews(refs, "away", newsAway);
-    renderNews(refs, "home", newsHome);
+    // Same story as DailyFaceoff above — ESPN blocks this deployment's
+    // requests, and the News Feed card is hidden outside demo mode anyway.
+    if (state.demoMode) {
+      const [newsAway, newsHome] = await Promise.all([
+        provider.fetchTeamNews(game.awayTeam.abbrev, state.demoMode),
+        provider.fetchTeamNews(game.homeTeam.abbrev, state.demoMode),
+      ]);
+      renderNews(refs, "away", newsAway);
+      renderNews(refs, "home", newsHome);
+    }
   } catch (e) {
     console.error("Error loading game details:", e);
     showToast(refs, "Failed loading rosters or standings!");
@@ -431,6 +456,7 @@ function init(): void {
   loadSettings(refs);
   refreshCacheStats(refs);
   renderPlaceholderList(refs);
+  updateFeatureAvailability(refs);
 
   // Initial date depends on the persisted demo-mode setting
   const initialDate = dateForMode(state.demoMode);
@@ -448,6 +474,7 @@ function init(): void {
   refs.demoModeToggle.addEventListener("change", async () => {
     state.demoMode = refs.demoModeToggle.checked;
     localStorage.setItem("gtg_settings_demo_mode", String(state.demoMode));
+    updateFeatureAvailability(refs);
     const date = dateForMode(state.demoMode);
     refs.datePicker.value = date;
     state.currentDate     = date;

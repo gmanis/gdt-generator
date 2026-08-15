@@ -569,6 +569,13 @@ textarea.editor {
 .primary-btn:active {
   transform: translateY(1px);
 }
+.primary-btn:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+}
+.primary-btn:disabled:hover {
+  background: var(--text-muted);
+}
 
 .secondary-btn {
   background: var(--bg-card);
