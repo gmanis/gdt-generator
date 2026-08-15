@@ -1,5 +1,5 @@
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
 };
 
 function jsonResponse(body: unknown, status: number, extraHeaders?: Record<string, string>): Response {
