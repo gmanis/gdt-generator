@@ -536,6 +536,28 @@ select:focus, input[type="date"]:focus, input[type="text"]:focus, textarea:focus
   margin-bottom: 1rem;
 }
 
+.placeholder-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.placeholder-chip {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.placeholder-chip:hover {
+  border-color: var(--hf-red);
+  color: var(--hf-red);
+}
+
 .textarea-container {
   position: relative;
   flex: 1;

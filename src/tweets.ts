@@ -19,11 +19,17 @@ export async function searchTweets(
   teamHint: string,
   demoMode: boolean,
 ): Promise<TweetSearchResult[]> {
+  const cleanHandle = handle.trim().replace(/^@/, "");
+
   if (demoMode) {
-    return MOCK_TWEET_RESULTS[teamHint] || [];
+    // Reflect whichever demo handle was actually typed (matched against the
+    // fictional handles baked into the mock tweet URLs), falling back to the
+    // current matchup's results so search never comes up empty in a demo.
+    const all = Object.values(MOCK_TWEET_RESULTS).flat();
+    const matched = all.filter(r => r.url.toLowerCase().includes(cleanHandle.toLowerCase()));
+    return matched.length > 0 ? matched : (MOCK_TWEET_RESULTS[teamHint] || all);
   }
 
-  const cleanHandle = handle.trim().replace(/^@/, "");
   if (!cleanHandle) return [];
 
   const query = `site:x.com/${cleanHandle} ${teamHint}`.trim();

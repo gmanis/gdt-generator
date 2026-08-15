@@ -30,7 +30,7 @@ export interface AppState {
 
 export const state: AppState = {
   demoMode: false,
-  favoriteTeam: "",
+  favoriteTeam: "NYR",
   currentDate: "",
   games: [],
   selectedGame: null,

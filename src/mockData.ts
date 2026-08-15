@@ -43,32 +43,38 @@ export const MOCK_ROSTERS: Record<string, Roster> = {
       { id: 8474596, firstName: "Jake", lastName: "Allen", sweaterNumber: 34, positionCode: "G", shootsCatches: "L" }
     ]
   },
-  BOS: {
+  NYR: {
     forwards: [
-      { id: 8477956, firstName: "David", lastName: "Pastrnak", sweaterNumber: 88, positionCode: "RW", shootsCatches: "R" },
-      { id: 8473419, firstName: "Brad", lastName: "Marchand", sweaterNumber: 63, positionCode: "LW", shootsCatches: "L" },
-      { id: 8477493, firstName: "Elias", lastName: "Lindholm", sweaterNumber: 28, positionCode: "C", shootsCatches: "R" },
-      { id: 8475745, firstName: "Charlie", sweaterNumber: 13, lastName: "Coyle", positionCode: "C", shootsCatches: "R" },
-      { id: 8478440, firstName: "Pavel", lastName: "Zacha", sweaterNumber: 18, positionCode: "C", shootsCatches: "L" },
-      { id: 8481521, firstName: "Trent", lastName: "Frederic", sweaterNumber: 11, positionCode: "LW", shootsCatches: "L" },
-      { id: 8481525, firstName: "Morgan", lastName: "Geekie", sweaterNumber: 39, positionCode: "RW", shootsCatches: "R" },
-      { id: 8478498, firstName: "John", lastName: "Beecher", sweaterNumber: 19, positionCode: "C", shootsCatches: "L" },
-      { id: 8479540, firstName: "Justin", lastName: "Brazeau", sweaterNumber: 55, positionCode: "RW", shootsCatches: "R" },
-      { id: 8475207, firstName: "Mark", lastName: "Kastelic", sweaterNumber: 47, positionCode: "C", shootsCatches: "R" },
-      { id: 8477969, firstName: "Max", lastName: "Jones", sweaterNumber: 21, positionCode: "LW", shootsCatches: "L" },
-      { id: 8480830, firstName: "Cole", lastName: "Koepke", sweaterNumber: 45, positionCode: "LW", shootsCatches: "L" }
+      { id: 8477416, firstName: "Oliver", lastName: "Bjorkstrand", sweaterNumber: 28, positionCode: "RW", shootsCatches: "R" },
+      { id: 8482877, firstName: "Jaroslav", lastName: "Chmelar", sweaterNumber: 49, positionCode: "RW", shootsCatches: "R" },
+      { id: 8482157, firstName: "Will", lastName: "Cuylle", sweaterNumber: 50, positionCode: "LW", shootsCatches: "L" },
+      { id: 8481604, firstName: "Pavel", lastName: "Dorofeyev", sweaterNumber: 16, positionCode: "RW", shootsCatches: "L" },
+      { id: 8481789, firstName: "Tye", lastName: "Kartye", sweaterNumber: 24, positionCode: "LW", shootsCatches: "L" },
+      { id: 8483690, firstName: "Noah", lastName: "Laba", sweaterNumber: 42, positionCode: "C", shootsCatches: "R" },
+      { id: 8482109, firstName: "Alexis", lastName: "Lafrenière", sweaterNumber: 13, positionCode: "LW", shootsCatches: "L" },
+      { id: 8476468, firstName: "J.T.", lastName: "Miller", sweaterNumber: 10, positionCode: "C", shootsCatches: "L" },
+      { id: 8484210, firstName: "Gabe", lastName: "Perreault", sweaterNumber: 94, positionCode: "RW", shootsCatches: "L" },
+      { id: 8479390, firstName: "Taylor", lastName: "Raddysh", sweaterNumber: 14, positionCode: "RW", shootsCatches: "R" },
+      { id: 8482460, firstName: "Matt", lastName: "Rempe", sweaterNumber: 73, positionCode: "C", shootsCatches: "R" },
+      { id: 8483669, firstName: "Adam", lastName: "Sykora", sweaterNumber: 38, positionCode: "LW", shootsCatches: "L" },
+      { id: 8480813, firstName: "Joe", lastName: "Veleno", sweaterNumber: 90, positionCode: "C", shootsCatches: "L" },
+      { id: 8476459, firstName: "Mika", lastName: "Zibanejad", sweaterNumber: 93, positionCode: "C", shootsCatches: "R" }
     ],
     defensemen: [
-      { id: 8479365, firstName: "Charlie", lastName: "McAvoy", sweaterNumber: 73, positionCode: "D", shootsCatches: "R" },
-      { id: 8476854, firstName: "Hampus", lastName: "Lindholm", sweaterNumber: 27, positionCode: "D", shootsCatches: "L" },
-      { id: 8478447, firstName: "Brandon", lastName: "Carlo", sweaterNumber: 25, positionCode: "D", shootsCatches: "R" },
-      { id: 8479983, firstName: "Mason", lastName: "Lohrei", sweaterNumber: 6, positionCode: "D", shootsCatches: "L" },
-      { id: 8478912, firstName: "Nikita", lastName: "Zadorov", sweaterNumber: 91, positionCode: "D", shootsCatches: "L" },
-      { id: 8481541, firstName: "Andrew", lastName: "Peeke", sweaterNumber: 52, positionCode: "D", shootsCatches: "R" }
+      { id: 8480434, firstName: "Sean", lastName: "Durzi", sweaterNumber: 5, positionCode: "D", shootsCatches: "R" },
+      { id: 8484169, firstName: "Drew", lastName: "Fortescue", sweaterNumber: 45, positionCode: "D", shootsCatches: "L" },
+      { id: 8479323, firstName: "Adam", lastName: "Fox", sweaterNumber: 23, positionCode: "D", shootsCatches: "R" },
+      { id: 8478882, firstName: "Vladislav", lastName: "Gavrikov", sweaterNumber: 44, positionCode: "D", shootsCatches: "L" },
+      { id: 8482861, firstName: "Vincent", lastName: "Iorio", sweaterNumber: 6, positionCode: "D", shootsCatches: "R" },
+      { id: 8477969, firstName: "Marcus", lastName: "Pettersson", sweaterNumber: 26, positionCode: "D", shootsCatches: "L" },
+      { id: 8481525, firstName: "Matthew", lastName: "Robertson", sweaterNumber: 29, positionCode: "D", shootsCatches: "L" },
+      { id: 8482073, firstName: "Braden", lastName: "Schneider", sweaterNumber: 4, positionCode: "D", shootsCatches: "R" },
+      { id: 8480001, firstName: "Urho", lastName: "Vaakanainen", sweaterNumber: 18, positionCode: "D", shootsCatches: "L" }
     ],
     goalies: [
-      { id: 8480280, firstName: "Jeremy", lastName: "Swayman", sweaterNumber: 1, positionCode: "G", shootsCatches: "L" },
-      { id: 8475852, firstName: "Joonas", lastName: "Korpisalo", sweaterNumber: 70, positionCode: "G", shootsCatches: "L" }
+      { id: 8482193, firstName: "Dylan", lastName: "Garand", sweaterNumber: 33, positionCode: "G", shootsCatches: "L" },
+      { id: 8476914, firstName: "Joonas", lastName: "Korpisalo", sweaterNumber: 70, positionCode: "G", shootsCatches: "L" },
+      { id: 8478048, firstName: "Igor", lastName: "Shesterkin", sweaterNumber: 31, positionCode: "G", shootsCatches: "L" }
     ]
   }
 };
@@ -83,14 +89,14 @@ export const MOCK_GAMES: GameSummary[] = [
     gameState: "PRE",
     tvBroadcasts: [
       { id: 309, market: "N", countryCode: "US", network: "ESPN" },
-      { id: 281, market: "N", countryCode: "CA", network: "TVAS" }
+      { id: 281, market: "N", countryCode: "US", network: "MSG" }
     ],
     awayTeam: {
-      id: 6,
-      commonName: "Bruins",
-      placeName: "Boston",
-      abbrev: "BOS",
-      logo: "https://assets.nhle.com/logos/nhl/svg/BOS_light.svg?season=20252026",
+      id: 3,
+      commonName: "Rangers",
+      placeName: "New York",
+      abbrev: "NYR",
+      logo: "https://assets.nhle.com/logos/nhl/svg/NYR_light.svg",
       score: 0,
       sog: 0
     },
@@ -114,14 +120,14 @@ export const MOCK_GAME_DETAILS: Record<number, GameDetails> = {
     startTimeUTC: new Date(Date.now() + 3600000 * 4).toISOString(),
     tvBroadcasts: [
       { id: 309, market: "N", countryCode: "US", network: "ESPN" },
-      { id: 281, market: "N", countryCode: "CA", network: "TVAS" }
+      { id: 281, market: "N", countryCode: "US", network: "MSG" }
     ],
     awayTeam: {
-      id: 6,
-      commonName: "Bruins",
-      placeName: "Boston",
-      abbrev: "BOS",
-      logo: "https://assets.nhle.com/logos/nhl/svg/BOS_light.svg?season=20252026"
+      id: 3,
+      commonName: "Rangers",
+      placeName: "New York",
+      abbrev: "NYR",
+      logo: "https://assets.nhle.com/logos/nhl/svg/NYR_light.svg"
     },
     homeTeam: {
       id: 1,
@@ -138,33 +144,33 @@ export const MOCK_NEWS: Record<string, NewsItem[]> = {
   NJD: [
     {
       id: "njd-1",
-      headline: "Sheldon Keefe previews matchup against Bruins: 'Consistency is key'",
-      description: "New Jersey Devils head coach Sheldon Keefe speaks on the challenges of containing David Pastrnak and the Bruins physical play. Emphasizes structured defensive zone entry.",
+      headline: "Sheldon Keefe previews matchup against Rangers: 'Consistency is key'",
+      description: "New Jersey Devils head coach Sheldon Keefe speaks on the challenges of containing the Rangers' top line and their physical play. Emphasizes structured defensive zone entry.",
       published: "2026-07-05T15:00:00Z",
       link: "https://www.espn.com/nhl/team/_/name/njd/new-jersey-devils"
     },
     {
       id: "njd-2",
       headline: "Jack Hughes ready for battle after morning skate",
-      description: "Devils center Jack Hughes expresses excitement for the division rivalry: 'We need these points. They're a tough squad but we feel good about our speed.'",
+      description: "Devils center Jack Hughes expresses excitement for the Hudson River Rivalry: 'We need these points. They're a tough squad but we feel good about our speed.'",
       published: "2026-07-05T18:30:00Z",
       link: "https://www.espn.com/nhl/player/_/id/4697413"
     }
   ],
-  BOS: [
+  NYR: [
     {
-      id: "bos-1",
-      headline: "Brad Marchand discusses leadership role and line combinations",
-      description: "Bruins captain Brad Marchand on integrating Elias Lindholm into the top line: 'Elias is smart defensively and has great vision. It makes my job easier.'",
+      id: "nyr-1",
+      headline: "Mika Zibanejad discusses leadership role and line combinations",
+      description: "Rangers alternate captain Mika Zibanejad on the team's forward depth heading into the Devils game: 'Everyone up and down the lineup can make a difference. It makes my job easier.'",
       published: "2026-07-05T16:15:00Z",
-      link: "https://www.espn.com/nhl/team/_/name/bos/boston-bruins"
+      link: "https://www.espn.com/nhl/team/_/name/nyr/new-york-rangers"
     },
     {
-      id: "bos-2",
-      headline: "Jeremy Swayman confirmed as starter for Prudential Center clash",
-      description: "Coach Jim Montgomery announces Jeremy Swayman in goal against New Jersey. Swayman looks to rebound after a tough overtime loss to Devils earlier this season.",
+      id: "nyr-2",
+      headline: "Igor Shesterkin confirmed as starter for Prudential Center clash",
+      description: "Coach Mike Sullivan announces Igor Shesterkin in goal against New Jersey. Shesterkin looks to rebound after a tough overtime loss to the Devils earlier this season.",
       published: "2026-07-05T19:00:00Z",
-      link: "https://www.espn.com/nhl/team/_/name/bos/boston-bruins"
+      link: "https://www.espn.com/nhl/team/_/name/nyr/new-york-rangers"
     }
   ]
 };
@@ -174,29 +180,29 @@ export const MOCK_QUOTES: Quote[] = [
     id: "q-1",
     author: "Sheldon Keefe",
     role: "Head Coach",
-    text: "We need our details to be perfect tonight. Boston is a team that pounces on every mistake you make in the neutral zone.",
+    text: "We need our details to be perfect tonight. The Rangers are a team that pounces on every mistake you make in the neutral zone.",
     teamAbbrev: "NJD"
   },
   {
     id: "q-2",
     author: "Jack Hughes",
     role: "Center",
-    text: "Playing against Marchand is always a battle. It gets competitive out there, but that is the kind of game you love to play.",
+    text: "Playing against a rival like the Rangers is always a battle. It gets competitive out there, but that is the kind of game you love to play.",
     teamAbbrev: "NJD"
   },
   {
     id: "q-3",
-    author: "Jim Montgomery",
+    author: "Mike Sullivan",
     role: "Head Coach",
     text: "New Jersey's transition game is elite. If we don't track back hard and keep them out of our zone, it's going to be a long night.",
-    teamAbbrev: "BOS"
+    teamAbbrev: "NYR"
   },
   {
     id: "q-4",
-    author: "Brad Marchand",
-    role: "Left Wing / Captain",
-    text: "Swayman has been our rock all season. Every time he is in net we feel confident we can win any tight hockey game.",
-    teamAbbrev: "BOS"
+    author: "Mika Zibanejad",
+    role: "Center / Alternate Captain",
+    text: "Shesterkin has been our rock all season. Every time he is in net we feel confident we can win any tight hockey game.",
+    teamAbbrev: "NYR"
   }
 ];
 
@@ -215,11 +221,11 @@ export const MOCK_TWEET_RESULTS: Record<string, TweetSearchResult[]> = {
       snippet: "Hughes line looked sharp at morning skate. Expect heavy minutes in a tight one tonight."
     }
   ],
-  BOS: [
+  NYR: [
     {
-      url: "https://x.com/BruinsBeatDemo/status/2000000000000000001",
-      title: "Bruins Beat Demo (@BruinsBeatDemo) on X",
-      snippet: "Swayman in net for Boston. Montgomery still finalizing the fourth line ahead of puck drop."
+      url: "https://x.com/RangersBeatDemo/status/2000000000000000001",
+      title: "Rangers Beat Demo (@RangersBeatDemo) on X",
+      snippet: "Shesterkin in net for New York. Sullivan still finalizing the fourth line ahead of puck drop."
     }
   ]
 };
@@ -239,11 +245,11 @@ export const MOCK_TWEET_EMBEDS: Record<string, TweetEmbed> = {
     text: "Hughes line looked sharp at morning skate. Expect heavy minutes in a tight one tonight.",
     html: `<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Hughes line looked sharp at morning skate. Expect heavy minutes in a tight one tonight.</p>&mdash; Devils Beat Demo (@DevilsBeatDemo) <a href="https://x.com/DevilsBeatDemo/status/1000000000000000002">March 10, 2026</a></blockquote>`
   },
-  "https://x.com/BruinsBeatDemo/status/2000000000000000001": {
-    url: "https://x.com/BruinsBeatDemo/status/2000000000000000001",
-    authorName: "Bruins Beat Demo",
-    authorUrl: "https://x.com/BruinsBeatDemo",
-    text: "Swayman in net for Boston. Montgomery still finalizing the fourth line ahead of puck drop.",
-    html: `<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Swayman in net for Boston. Montgomery still finalizing the fourth line ahead of puck drop.</p>&mdash; Bruins Beat Demo (@BruinsBeatDemo) <a href="https://x.com/BruinsBeatDemo/status/2000000000000000001">March 10, 2026</a></blockquote>`
+  "https://x.com/RangersBeatDemo/status/2000000000000000001": {
+    url: "https://x.com/RangersBeatDemo/status/2000000000000000001",
+    authorName: "Rangers Beat Demo",
+    authorUrl: "https://x.com/RangersBeatDemo",
+    text: "Shesterkin in net for New York. Sullivan still finalizing the fourth line ahead of puck drop.",
+    html: `<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Shesterkin in net for New York. Sullivan still finalizing the fourth line ahead of puck drop.</p>&mdash; Rangers Beat Demo (@RangersBeatDemo) <a href="https://x.com/RangersBeatDemo/status/2000000000000000001">March 10, 2026</a></blockquote>`
   }
 };

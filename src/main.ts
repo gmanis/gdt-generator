@@ -2,13 +2,14 @@ import { NhlLeagueProvider } from "./leagues";
 import { collectRefs, AppRefs } from "./refs";
 import { state } from "./state";
 import { renderLineupSlots, parseProjectedLines, syncLineupUI } from "./lineup";
-import { generateThread, DEFAULT_TEMPLATES } from "./generate";
+import { generateThread, saveCurrentTemplate, DEFAULT_TEMPLATES } from "./generate";
 import { CacheManager } from "./cache";
 import { MOCK_QUOTES } from "./mockData";
 import { Quote, NewsItem, TweetSearchResult } from "./types";
 import { showToast, showLoading, hideLoading, openModal, closeModal } from "./ui";
 import { NHL_TEAMS } from "./teams";
 import { searchTweets, fetchTweetEmbed, isTweetUrl } from "./tweets";
+import { TEMPLATE_PLACEHOLDERS } from "./templates";
 
 const provider = new NhlLeagueProvider();
 
@@ -45,7 +46,7 @@ function loadSettings(refs: AppRefs): void {
     opt.textContent = t.name;
     refs.favoriteTeamSelect.appendChild(opt);
   });
-  const savedFavorite = localStorage.getItem("gtg_settings_favorite_team") ?? "";
+  const savedFavorite = localStorage.getItem("gtg_settings_favorite_team") ?? "NYR";
   refs.favoriteTeamSelect.value = savedFavorite;
   state.favoriteTeam = savedFavorite;
 }
@@ -74,6 +75,31 @@ function resetTemplate(refs: AppRefs): void {
   templates[style] = DEFAULT_TEMPLATES[style];
   localStorage.setItem("gtg_settings_templates", JSON.stringify(templates));
   showToast(refs, "Template reset!");
+}
+
+/** Renders the {{placeholder}} reference chips; clicking one inserts it at the cursor. */
+function renderPlaceholderList(refs: AppRefs): void {
+  refs.placeholderList.innerHTML = "";
+  TEMPLATE_PLACEHOLDERS.forEach(p => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "placeholder-chip";
+    chip.textContent = `{{${p.key}}}`;
+    chip.title = p.description;
+    chip.addEventListener("click", () => insertPlaceholder(refs, p.key));
+    refs.placeholderList.appendChild(chip);
+  });
+}
+
+function insertPlaceholder(refs: AppRefs, key: string): void {
+  const editor = refs.templateBodyEditor;
+  const token  = `{{${key}}}`;
+  const start  = editor.selectionStart ?? editor.value.length;
+  const end    = editor.selectionEnd ?? editor.value.length;
+
+  editor.value = editor.value.slice(0, start) + token + editor.value.slice(end);
+  editor.focus();
+  editor.selectionStart = editor.selectionEnd = start + token.length;
 }
 
 function refreshCacheStats(refs: AppRefs): void {
@@ -413,6 +439,7 @@ function init(): void {
   // Settings (loadSettings sets state.demoMode/state.favoriteTeam from localStorage)
   loadSettings(refs);
   refreshCacheStats(refs);
+  renderPlaceholderList(refs);
 
   // Initial date depends on the persisted demo-mode setting
   const initialDate = dateForMode(state.demoMode);
@@ -473,6 +500,10 @@ function init(): void {
   // Template
   refs.templateStyleSelect.addEventListener("change", () => loadTemplateForStyle(refs));
   refs.resetTemplateBtn.addEventListener("click",     () => resetTemplate(refs));
+  refs.saveTemplateBtn.addEventListener("click",      () => {
+    saveCurrentTemplate(refs);
+    showToast(refs, "Template saved!");
+  });
 
   // Scratches
   refs.awayScratchesInput.addEventListener("input", e => {

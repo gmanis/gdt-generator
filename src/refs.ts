@@ -45,6 +45,8 @@ export interface AppRefs {
   templateStyleSelect: HTMLSelectElement;
   templateBodyEditor: HTMLTextAreaElement;
   resetTemplateBtn: HTMLButtonElement;
+  saveTemplateBtn: HTMLButtonElement;
+  placeholderList: HTMLDivElement;
 
   // Output
   generateThreadBtn: HTMLButtonElement;

@@ -125,6 +125,27 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 </div>`
 };
 
+// Every placeholder buildValues() (in generate.ts) populates, shown as a
+// reference next to the template editor so they don't have to be memorized.
+export const TEMPLATE_PLACEHOLDERS: { key: string; description: string }[] = [
+  { key: "away_team",           description: "Away team full name" },
+  { key: "home_team",           description: "Home team full name" },
+  { key: "away_abbrev",         description: "Away team abbreviation" },
+  { key: "home_abbrev",         description: "Home team abbreviation" },
+  { key: "venue",               description: "Game venue" },
+  { key: "game_date",           description: "Formatted game date" },
+  { key: "game_time",           description: "Formatted game time" },
+  { key: "tv_broadcasts",       description: "TV broadcast networks" },
+  { key: "team_comparison_table", description: "Record/PP%/PK% comparison table" },
+  { key: "standings_table",     description: "Division standings table" },
+  { key: "away_lineup",         description: "Away projected lineup (plain text)" },
+  { key: "home_lineup",         description: "Home projected lineup (plain text)" },
+  { key: "away_lineup_images",  description: "Away lineup with player photos inlined" },
+  { key: "home_lineup_images",  description: "Home lineup with player photos inlined" },
+  { key: "quotes",              description: "Manually entered quotes" },
+  { key: "tweets",              description: "Selected media tweets" },
+];
+
 export class TemplateEngine {
   static render(template: string, values: Record<string, string>): string {
     let rendered = template;

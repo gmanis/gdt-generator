@@ -151,9 +151,22 @@ function buildPreview(raw: string, style: string): string {
   return bbcodeToHtml(raw);
 }
 
+// ─── Template persistence ─────────────────────────────────────────────────────
+
+/** Persists the editor's current contents as the saved template for the selected style. */
+export function saveCurrentTemplate(refs: AppRefs): void {
+  const style = refs.templateStyleSelect.value;
+  const saved = localStorage.getItem("gtg_settings_templates");
+  const templates = saved ? JSON.parse(saved) : {};
+  templates[style] = refs.templateBodyEditor.value;
+  localStorage.setItem("gtg_settings_templates", JSON.stringify(templates));
+}
+
 // ─── Public entry point ───────────────────────────────────────────────────────
 
 export function generateThread(refs: AppRefs, state: AppState): void {
+  saveCurrentTemplate(refs);
+
   if (!state.selectedGame) {
     showToast(refs, "Please select a game first!");
     return;
@@ -162,12 +175,6 @@ export function generateThread(refs: AppRefs, state: AppState): void {
   const style    = refs.templateStyleSelect.value;
   const renderer = getRenderer(style);
   const template = refs.templateBodyEditor.value;
-
-  // Persist edits to this style's template
-  const saved    = localStorage.getItem("gtg_settings_templates");
-  const templates = saved ? JSON.parse(saved) : {};
-  templates[style] = template;
-  localStorage.setItem("gtg_settings_templates", JSON.stringify(templates));
 
   const values = buildValues(state, renderer);
   const raw    = TemplateEngine.render(template, values);

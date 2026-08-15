@@ -168,7 +168,16 @@
                 <option value="html">HTML Blog Style</option>
               </select>
             </div>
-            <button data-ref="resetTemplateBtn" class="secondary-btn">Reset to Default</button>
+            <div style="display:flex; gap:0.5rem;">
+              <button data-ref="resetTemplateBtn" class="secondary-btn">Reset to Default</button>
+              <button data-ref="saveTemplateBtn" class="primary-btn" style="padding:0.55rem 1.15rem; font-size:0.85rem;">Save Template</button>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0.75rem;">
+            <label>Available Placeholders (click to insert)</label>
+            <div data-ref="placeholderList" class="placeholder-list">
+              <!-- Placeholder chips injected here -->
+            </div>
           </div>
           <div class="textarea-container">
             <textarea
