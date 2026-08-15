@@ -1,4 +1,4 @@
-import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, Quote, TweetSearchResult, TweetEmbed } from "./types";
+import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, Quote, TweetSearchResult, TweetEmbed, DailyFaceoffLines } from "./types";
 
 export const MOCK_STANDINGS: StandingsTeam[] = [
   // Atlantic Division
@@ -251,5 +251,45 @@ export const MOCK_TWEET_EMBEDS: Record<string, TweetEmbed> = {
     authorUrl: "https://x.com/RangersBeatDemo",
     text: "Shesterkin in net for New York. Sullivan still finalizing the fourth line ahead of puck drop.",
     html: `<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Shesterkin in net for New York. Sullivan still finalizing the fourth line ahead of puck drop.</p>&mdash; Rangers Beat Demo (@RangersBeatDemo) <a href="https://x.com/RangersBeatDemo/status/2000000000000000001">March 10, 2026</a></blockquote>`
+  }
+};
+
+// Demo-mode stand-in for the real /api/dailyfaceoff fetch. The NYR entry mirrors
+// real DailyFaceoff line combinations captured for this roster; NJD is a
+// plausible illustrative grouping.
+export const MOCK_DAILYFACEOFF_LINES: Record<string, DailyFaceoffLines> = {
+  NYR: {
+    teamName: "New York Rangers",
+    sourceName: "DailyFaceoff (Demo)",
+    updatedAt: "2026-07-04T12:39:36.766Z",
+    forwards: [
+      ["Gabe Perreault", "Mika Zibanejad", "Pavel Dorofeyev"],
+      ["Oliver Bjorkstrand", "J.T. Miller", "Alexis Lafrenière"],
+      ["Will Cuylle", "Noah Laba", "Taylor Raddysh"],
+      ["Tye Kartye", "Joe Veleno", "Matt Rempe"]
+    ],
+    defense: [
+      ["Vladislav Gavrikov", "Adam Fox"],
+      ["Marcus Pettersson", "Sean Durzi"],
+      ["Matthew Robertson", "Braden Schneider"]
+    ],
+    goalies: ["Igor Shesterkin", "Joonas Korpisalo"]
+  },
+  NJD: {
+    teamName: "New Jersey Devils",
+    sourceName: "DailyFaceoff (Demo)",
+    updatedAt: "2026-07-04T12:39:36.766Z",
+    forwards: [
+      ["Ondrej Palat", "Nico Hischier", "Jesper Bratt"],
+      ["Timo Meier", "Jack Hughes", "Dawson Mercer"],
+      ["Tomas Tatar", "Michael McLeod", "Stefan Noesen"],
+      ["Paul Cotter", "Curtis Lazar", "Nathan Bastian"]
+    ],
+    defense: [
+      ["Jonas Siegenthaler", "Dougie Hamilton"],
+      ["Luke Hughes", "Brett Pesce"],
+      ["Simon Nemec", "John Marino"]
+    ],
+    goalies: ["Jacob Markstrom", "Jake Allen"]
   }
 };

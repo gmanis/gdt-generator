@@ -134,3 +134,14 @@ export interface TweetEmbed {
   html: string;
   text: string;
 }
+
+// Projected lines fetched from DailyFaceoff, already grouped by the source —
+// forwards/defense are player-name arrays in the same shape as LineupConfig.
+export interface DailyFaceoffLines {
+  teamName: string;
+  sourceName: string;
+  updatedAt: string;
+  forwards: string[][];
+  defense: string[][];
+  goalies: string[];
+}

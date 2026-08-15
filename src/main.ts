@@ -1,7 +1,7 @@
 import { NhlLeagueProvider } from "./leagues";
 import { collectRefs, AppRefs } from "./refs";
 import { state } from "./state";
-import { renderLineupSlots, parseProjectedLines, syncLineupUI } from "./lineup";
+import { renderLineupSlots, parseProjectedLines, applyDailyFaceoffLines, syncLineupUI } from "./lineup";
 import { generateThread, saveCurrentTemplate, DEFAULT_TEMPLATES } from "./generate";
 import { CacheManager } from "./cache";
 import { MOCK_QUOTES } from "./mockData";
@@ -10,6 +10,7 @@ import { showToast, showLoading, hideLoading, openModal, closeModal } from "./ui
 import { NHL_TEAMS } from "./teams";
 import { searchTweets, fetchTweetEmbed, isTweetUrl } from "./tweets";
 import { TEMPLATE_PLACEHOLDERS } from "./templates";
+import { fetchDailyFaceoffLines } from "./dailyfaceoff";
 
 const provider = new NhlLeagueProvider();
 
@@ -490,7 +491,10 @@ function init(): void {
   // Modals
   refs.openSettingsBtn.addEventListener("click",   () => openModal(refs.settingsModal));
   refs.closeSettingsModal.addEventListener("click",() => closeModal(refs.settingsModal));
-  refs.openImportModalBtn.addEventListener("click",() => openModal(refs.importModal));
+  refs.openImportModalBtn.addEventListener("click",() => {
+    refs.dailyFaceoffStatus.textContent = "";
+    openModal(refs.importModal);
+  });
   refs.closeImportModal.addEventListener("click",  () => closeModal(refs.importModal));
 
   // Settings actions
@@ -539,6 +543,27 @@ function init(): void {
     syncLineupUI(container, state.lineups[team]);
     showToast(refs, `Imported ${fLines} F lines, ${dPairs} D pairs, ${goalies} goalies!`);
     closeModal(refs.importModal);
+  });
+
+  // Lineup fetch from DailyFaceoff
+  refs.fetchDailyFaceoffBtn.addEventListener("click", async () => {
+    const team = refs.importTeamSelect.value as "away" | "home";
+    const teamAbbrev = team === "away" ? state.selectedGame?.awayTeam.abbrev : state.selectedGame?.homeTeam.abbrev;
+    if (!teamAbbrev) { showToast(refs, "Select a game first!"); return; }
+
+    refs.dailyFaceoffStatus.textContent = "Fetching…";
+    try {
+      const lines = await fetchDailyFaceoffLines(teamAbbrev, state.demoMode);
+      const { fLines, dPairs, goalies } = applyDailyFaceoffLines(lines, team, state);
+      const container = team === "away" ? refs.awayLineupSlots : refs.homeLineupSlots;
+      syncLineupUI(container, state.lineups[team]);
+      refs.dailyFaceoffStatus.textContent = `${lines.sourceName} · updated ${new Date(lines.updatedAt).toLocaleDateString()}`;
+      showToast(refs, `Fetched ${fLines} F lines, ${dPairs} D pairs, ${goalies} goalies from DailyFaceoff!`);
+      closeModal(refs.importModal);
+    } catch (e) {
+      console.error("fetchDailyFaceoffLines error:", e);
+      refs.dailyFaceoffStatus.textContent = (e as Error).message;
+    }
   });
 
   // Generate + copy

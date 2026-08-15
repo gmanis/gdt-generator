@@ -1,4 +1,4 @@
-import { Roster, LineupConfig } from "./types";
+import { Roster, LineupConfig, Player, DailyFaceoffLines } from "./types";
 import { AppState, emptyLineup } from "./state";
 
 // ─── Player Select ────────────────────────────────────────────────────────────
@@ -144,6 +144,33 @@ export function syncLineupUI(container: HTMLElement, lineup: LineupConfig): void
     if (idx < selects.length) selects[idx++].value = lineup.goalies[g] ?? "";
 }
 
+// ─── Name Matching ────────────────────────────────────────────────────────────
+
+/**
+ * Fuzzy-matches a name (from pasted text or an external source like DailyFaceoff)
+ * against a roster, returning the roster's own "First Last" spelling so it lines
+ * up with everything else keyed off that string (headshots, dropdown values).
+ */
+export function matchPlayerName(input: string, allPlayers: Player[]): string {
+  const clean = input.replace(/[#\d\-\*\[\]]/g, "").trim().toLowerCase();
+  if (!clean) return "";
+
+  let best = "";
+  let score = 0;
+  for (const p of allPlayers) {
+    const last = p.lastName.toLowerCase();
+    const full = `${p.firstName.toLowerCase()} ${last}`;
+    if (clean === full || clean === last) {
+      return `${p.firstName} ${p.lastName}`;
+    }
+    if (clean.includes(last) && last.length > 3 && last.length > score) {
+      score = last.length;
+      best = `${p.firstName} ${p.lastName}`;
+    }
+  }
+  return best || input;
+}
+
 // ─── Projected Lines Paste Parser ────────────────────────────────────────────
 
 /**
@@ -158,25 +185,7 @@ export function parseProjectedLines(
   const roster = state.rosters[team];
   const lineup = state.lineups[team];
   const allPlayers = [...roster.forwards, ...roster.defensemen, ...roster.goalies];
-
-  function fuzzyMatch(input: string): string {
-    const clean = input.replace(/[#\d\-\*\[\]]/g, "").trim().toLowerCase();
-    if (!clean) return "";
-    let best = "";
-    let score = 0;
-    for (const p of allPlayers) {
-      const last = p.lastName.toLowerCase();
-      const full = `${p.firstName.toLowerCase()} ${last}`;
-      if (clean === full || clean === last) {
-        return `${p.firstName} ${p.lastName}`;
-      }
-      if (clean.includes(last) && last.length > 3 && last.length > score) {
-        score = last.length;
-        best = `${p.firstName} ${p.lastName}`;
-      }
-    }
-    return best || input;
-  }
+  const fuzzyMatch = (input: string) => matchPlayerName(input, allPlayers);
 
   const lines = rawText
     .split("\n")
@@ -198,6 +207,43 @@ export function parseProjectedLines(
       goalies++;
     }
   }
+
+  return { fLines, dPairs, goalies };
+}
+
+// ─── DailyFaceoff Import ──────────────────────────────────────────────────────
+
+/**
+ * Applies structured line data (already grouped into forward lines/D pairs/
+ * goalies by the source) to a team's lineup, fuzzy-matching each name against
+ * the roster the same way the paste parser does.
+ */
+export function applyDailyFaceoffLines(
+  lines: DailyFaceoffLines,
+  team: "away" | "home",
+  state: AppState,
+): { fLines: number; dPairs: number; goalies: number } {
+  const roster = state.rosters[team];
+  const lineup = state.lineups[team];
+  const allPlayers = [...roster.forwards, ...roster.defensemen, ...roster.goalies];
+  const fuzzyMatch = (input: string) => (input ? matchPlayerName(input, allPlayers) : "");
+
+  let fLines = 0, dPairs = 0, goalies = 0;
+
+  lines.forwards.slice(0, 4).forEach((line, idx) => {
+    lineup.forwards[idx] = [fuzzyMatch(line[0]), fuzzyMatch(line[1]), fuzzyMatch(line[2])];
+    if (line.some(Boolean)) fLines++;
+  });
+
+  lines.defense.slice(0, 3).forEach((pair, idx) => {
+    lineup.defense[idx] = [fuzzyMatch(pair[0]), fuzzyMatch(pair[1])];
+    if (pair.some(Boolean)) dPairs++;
+  });
+
+  lines.goalies.slice(0, 2).forEach((name, idx) => {
+    lineup.goalies[idx] = fuzzyMatch(name);
+    if (name) goalies++;
+  });
 
   return { fLines, dPairs, goalies };
 }

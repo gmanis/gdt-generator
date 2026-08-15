@@ -50,7 +50,7 @@
         <div class="card">
           <div class="card-title">
             Projected Lineups
-            <button data-ref="openImportModalBtn" class="quick-paste-btn" style="display:none;">Paste DailyFaceoff Lines</button>
+            <button data-ref="openImportModalBtn" class="quick-paste-btn" style="display:none;">Import Lines</button>
           </div>
           
           <div class="lineup-container">
@@ -271,9 +271,27 @@
   <div data-ref="importModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        Import DailyFaceoff Projected Lines
+        Import Projected Lines
         <button data-ref="closeImportModal" class="close-modal">&times;</button>
       </div>
+
+      <div class="field" style="margin-bottom:1rem;">
+        <label for="importTeamSelect">Target Team</label>
+        <select id="importTeamSelect" data-ref="importTeamSelect">
+          <option value="away">Away Team</option>
+          <option value="home">Home Team</option>
+        </select>
+      </div>
+
+      <button data-ref="fetchDailyFaceoffBtn" class="primary-btn" style="width:100%; justify-content:center; margin-bottom:0.5rem;">Fetch from DailyFaceoff</button>
+      <p data-ref="dailyFaceoffStatus" class="info-text" style="margin-bottom:1rem; min-height:1em;"></p>
+
+      <div style="display:flex; align-items:center; gap:0.75rem; margin:1rem 0; color:var(--text-secondary); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em;">
+        <div style="flex:1; border-top:1px dashed var(--border-color);"></div>
+        or paste manually
+        <div style="flex:1; border-top:1px dashed var(--border-color);"></div>
+      </div>
+
       <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1rem;">
         Paste plain-text projected lines (e.g. from Daily Faceoff or Twitter). Names are fuzzy-matched against the roster.
       </p>
@@ -282,14 +300,6 @@ Artemi Panarin - Vincent Trocheck - Alexis Lafreniere
 Chris Kreider - Mika Zibanejad - Reilly Smith
 K'Andre Miller - Adam Fox
 Igor Shesterkin"></textarea>
-      
-      <div class="field" style="margin:1rem 0;">
-        <label for="importTeamSelect">Target Team</label>
-        <select id="importTeamSelect" data-ref="importTeamSelect">
-          <option value="away">Away Team</option>
-          <option value="home">Home Team</option>
-        </select>
-      </div>
 
       <div class="modal-footer">
         <button data-ref="parseLineupBtn" class="primary-btn" style="padding:0.5rem 1rem; font-size:0.85rem;">Parse &amp; Import</button>

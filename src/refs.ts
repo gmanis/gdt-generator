@@ -66,8 +66,10 @@ export interface AppRefs {
 
   // Import lineup modal
   importModal: HTMLDivElement;
-  quickPasteTextarea: HTMLTextAreaElement;
   importTeamSelect: HTMLSelectElement;
+  fetchDailyFaceoffBtn: HTMLButtonElement;
+  dailyFaceoffStatus: HTMLParagraphElement;
+  quickPasteTextarea: HTMLTextAreaElement;
   parseLineupBtn: HTMLButtonElement;
   closeImportModal: HTMLButtonElement;
 
