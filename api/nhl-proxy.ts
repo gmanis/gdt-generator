@@ -14,28 +14,25 @@ function jsonResponse(body: unknown, status: number, extraHeaders?: Record<strin
 }
 
 // Several NHL API endpoints (roster/current, standings/now) 307-redirect to a
-// season-specific URL. Vercel's Edge Runtime doesn't reliably auto-follow that
-// redirect (confirmed: identical requests succeed outside the edge runtime),
-// so follow it manually instead of trusting fetch()'s default redirect handling.
-async function fetchFollowingRedirects(
-  url: string,
-  headers: Record<string, string>,
-  maxRedirects = 5,
-): Promise<{ res: Response; chain: string[]; rawLocations: (string | null)[] }> {
+// season-specific URL. Confirmed via debug logging that Vercel's Edge Runtime
+// rewrites the *hostname* of that redirect's Location header to this
+// deployment's own domain (the path stays correct) — so the target ends up
+// pointing at us instead of api-web.nhle.com, and following it 404s here.
+// Workaround: ignore whatever host the Location header claims and rebuild the
+// redirect target using the original request's real (allowlisted) origin.
+async function fetchFollowingRedirects(url: string, headers: Record<string, string>, maxRedirects = 5): Promise<Response> {
+  const originalOrigin = new URL(url).origin;
   let currentUrl = url;
-  const chain = [url];
-  const rawLocations: (string | null)[] = [];
   for (let i = 0; i < maxRedirects; i++) {
     const res = await fetch(currentUrl, { headers, redirect: 'manual' });
     if (res.status >= 300 && res.status < 400) {
       const location = res.headers.get('location');
-      rawLocations.push(location);
-      if (!location) return { res, chain, rawLocations };
-      currentUrl = new URL(location, currentUrl).toString();
-      chain.push(currentUrl);
+      if (!location) return res;
+      const locationUrl = new URL(location, currentUrl);
+      currentUrl = originalOrigin + locationUrl.pathname + locationUrl.search;
       continue;
     }
-    return { res, chain, rawLocations };
+    return res;
   }
   throw new Error(`Too many redirects fetching ${url}`);
 }
@@ -55,22 +52,13 @@ export default async function handler(request: Request) {
       return jsonResponse({ error: 'Hostname not allowed' }, 403);
     }
 
-    const { res: fetchRes, chain, rawLocations } = await fetchFollowingRedirects(url, {
+    const fetchRes = await fetchFollowingRedirects(url, {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       'Accept': 'application/json'
     });
 
     if (!fetchRes.ok) {
-      // TEMPORARY: debug info to diagnose a Vercel-specific 404 on paths that
-      // 200 from every other vantage point tested so far. Remove once solved.
-      const bodyText = await fetchRes.text().catch(() => '');
-      return jsonResponse({
-        error: `Target server returned ${fetchRes.status} ${fetchRes.statusText}`,
-        debugChain: chain,
-        debugRawLocations: rawLocations,
-        debugFinalHeaders: Object.fromEntries(fetchRes.headers.entries()),
-        debugBody: bodyText.slice(0, 500),
-      }, fetchRes.status);
+      return jsonResponse({ error: `Target server returned ${fetchRes.status} ${fetchRes.statusText}` }, fetchRes.status);
     }
 
     const data = await fetchRes.json();
