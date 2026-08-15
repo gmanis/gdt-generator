@@ -118,13 +118,6 @@ export interface NewsItem {
   byline?: string;
 }
 
-// A candidate tweet surfaced by a search, before the user has chosen to embed it.
-export interface TweetSearchResult {
-  url: string;
-  title: string;
-  snippet: string;
-}
-
 // A tweet the user has selected to embed in the generated thread, with the
 // real oEmbed data needed to render it (author, and Twitter's own HTML embed).
 export interface TweetEmbed {

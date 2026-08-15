@@ -1,10 +1,10 @@
 /**
  * Fetches JSON from one of this app's own /api/* serverless functions
- * (dailyfaceoff, tweet-search). Those only run when deployed on Vercel, or
- * locally under `vercel dev` — under plain `npm run dev` (Vite's own dev
- * server), the request falls through to Vite's dev server instead, which
- * returns HTML, not JSON. Left unguarded, that surfaces as a confusing
- * "Unexpected token '<'" JSON parse error; this gives a clear message instead.
+ * (dailyfaceoff). Those only run when deployed on Vercel, or locally under
+ * `vercel dev` — under plain `npm run dev` (Vite's own dev server), the
+ * request falls through to Vite's dev server instead, which returns HTML,
+ * not JSON. Left unguarded, that surfaces as a confusing "Unexpected token
+ * '<'" JSON parse error; this gives a clear message instead.
  */
 export async function fetchOwnApiJson<T = any>(path: string): Promise<T> {
   const res = await fetch(path);

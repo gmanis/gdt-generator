@@ -409,46 +409,6 @@ select:focus, input[type="date"]:focus, input[type="text"]:focus, textarea:focus
   margin-bottom: 0.5rem;
 }
 
-/* Media Tweets */
-.tweet-result-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.5rem;
-  background: var(--bg-card-alt);
-  border: 1px solid var(--border-color);
-  padding: 0.6rem 0.7rem;
-  border-radius: var(--radius);
-  font-size: 0.8rem;
-  margin-bottom: 0.5rem;
-}
-
-.tweet-result-item p {
-  flex: 1;
-  color: var(--text-secondary);
-}
-
-.tweet-result-item strong {
-  display: block;
-  color: var(--text-primary);
-  margin-bottom: 0.15rem;
-}
-
-.add-tweet-btn {
-  background: var(--hf-red);
-  color: var(--text-on-dark);
-  border: none;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.3rem 0.6rem;
-  border-radius: var(--radius);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.add-tweet-btn:hover {
-  background: var(--hf-red-dark);
-}
-
 /* News Helper Panel */
 .news-widget-container {
   display: grid;

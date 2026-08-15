@@ -1,41 +1,11 @@
-import { TweetSearchResult, TweetEmbed } from "./types";
+import { TweetEmbed } from "./types";
 import { fetchWithProxy } from "./proxy";
-import { fetchOwnApiJson } from "./ownApi";
-import { MOCK_TWEET_RESULTS, MOCK_TWEET_EMBEDS } from "./mockData";
+import { MOCK_TWEET_EMBEDS } from "./mockData";
 
 const TWEET_URL_PATTERN = /^https:\/\/(?:twitter\.com|x\.com)\/[^/]+\/status\/\d+/;
 
 export function isTweetUrl(url: string): boolean {
   return TWEET_URL_PATTERN.test(url.trim());
-}
-
-/**
- * Finds candidate tweets from a given handle mentioning the current matchup, via
- * our own /api/tweet-search endpoint (a Google Programmable Search lookup — the
- * only piece that needs a server-side API key, so it can't go through the
- * generic CORS proxy like everything else).
- */
-export async function searchTweets(
-  handle: string,
-  teamHint: string,
-  demoMode: boolean,
-): Promise<TweetSearchResult[]> {
-  const cleanHandle = handle.trim().replace(/^@/, "");
-
-  if (demoMode) {
-    // Reflect whichever demo handle was actually typed (matched against the
-    // fictional handles baked into the mock tweet URLs), falling back to the
-    // current matchup's results so search never comes up empty in a demo.
-    const all = Object.values(MOCK_TWEET_RESULTS).flat();
-    const matched = all.filter(r => r.url.toLowerCase().includes(cleanHandle.toLowerCase()));
-    return matched.length > 0 ? matched : (MOCK_TWEET_RESULTS[teamHint] || all);
-  }
-
-  if (!cleanHandle) return [];
-
-  const query = `site:x.com/${cleanHandle} ${teamHint}`.trim();
-  const data = await fetchOwnApiJson<{ results: TweetSearchResult[] }>(`/api/tweet-search?q=${encodeURIComponent(query)}`);
-  return data.results || [];
 }
 
 /**

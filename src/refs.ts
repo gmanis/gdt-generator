@@ -28,9 +28,6 @@ export interface AppRefs {
   quotesListContainer: HTMLDivElement;
 
   // Media tweets
-  tweetSearchInput: HTMLInputElement;
-  searchTweetsBtn: HTMLButtonElement;
-  tweetResultsContainer: HTMLDivElement;
   tweetUrlInput: HTMLInputElement;
   addTweetUrlBtn: HTMLButtonElement;
   selectedTweetsContainer: HTMLDivElement;

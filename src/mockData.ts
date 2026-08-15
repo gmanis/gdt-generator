@@ -1,4 +1,4 @@
-import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, Quote, TweetSearchResult, TweetEmbed, DailyFaceoffLines } from "./types";
+import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, Quote, TweetEmbed, DailyFaceoffLines } from "./types";
 
 export const MOCK_STANDINGS: StandingsTeam[] = [
   // Atlantic Division
@@ -206,30 +206,8 @@ export const MOCK_QUOTES: Quote[] = [
   }
 ];
 
-// Fictional demo-only handles (not real reporters) so the Media Tweets search/embed
-// flow can be exercised end-to-end without hitting the real search API or oEmbed.
-export const MOCK_TWEET_RESULTS: Record<string, TweetSearchResult[]> = {
-  NJD: [
-    {
-      url: "https://x.com/DevilsBeatDemo/status/1000000000000000001",
-      title: "Devils Beat Demo (@DevilsBeatDemo) on X",
-      snippet: "Keefe confirms Markstrom gets the start tonight against the Rangers. Lineup mostly steady heading into puck drop."
-    },
-    {
-      url: "https://x.com/DevilsBeatDemo/status/1000000000000000002",
-      title: "Devils Beat Demo (@DevilsBeatDemo) on X",
-      snippet: "Hughes line looked sharp at morning skate. Expect heavy minutes in a tight one tonight."
-    }
-  ],
-  NYR: [
-    {
-      url: "https://x.com/RangersBeatDemo/status/2000000000000000001",
-      title: "Rangers Beat Demo (@RangersBeatDemo) on X",
-      snippet: "Shesterkin in net for New York. Sullivan still finalizing the fourth line ahead of puck drop."
-    }
-  ]
-};
-
+// Fictional demo-only tweets (not real reporters) so pasting one of these exact
+// URLs into Media Tweets shows a demo embed without hitting the real oEmbed API.
 export const MOCK_TWEET_EMBEDS: Record<string, TweetEmbed> = {
   "https://x.com/DevilsBeatDemo/status/1000000000000000001": {
     url: "https://x.com/DevilsBeatDemo/status/1000000000000000001",

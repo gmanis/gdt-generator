@@ -5,10 +5,10 @@ import { renderLineupSlots, parseProjectedLines, applyDailyFaceoffLines, syncLin
 import { generateThread, saveCurrentTemplate, DEFAULT_TEMPLATES } from "./generate";
 import { CacheManager } from "./cache";
 import { MOCK_QUOTES } from "./mockData";
-import { Quote, NewsItem, TweetSearchResult } from "./types";
+import { Quote, NewsItem } from "./types";
 import { showToast, showLoading, hideLoading, openModal, closeModal } from "./ui";
 import { NHL_TEAMS } from "./teams";
-import { searchTweets, fetchTweetEmbed, isTweetUrl } from "./tweets";
+import { fetchTweetEmbed, isTweetUrl } from "./tweets";
 import { TEMPLATE_PLACEHOLDERS } from "./templates";
 import { fetchDailyFaceoffLines } from "./dailyfaceoff";
 
@@ -365,51 +365,6 @@ function saveTweets(): void {
   localStorage.setItem("gtg_tweets", JSON.stringify(state.selectedTweets));
 }
 
-async function searchAndRenderTweets(refs: AppRefs): Promise<void> {
-  const handle = refs.tweetSearchInput.value.trim();
-  if (!handle) { showToast(refs, "Enter a handle to search!"); return; }
-
-  const game = state.selectedGame;
-  const teamHint = game ? `${game.awayTeam.commonName} ${game.homeTeam.commonName}` : "";
-  const demoTeamAbbrev = game?.homeTeam.abbrev ?? game?.awayTeam.abbrev ?? "";
-
-  refs.tweetResultsContainer.innerHTML = `<p class="no-data">Searching…</p>`;
-  try {
-    const results = await searchTweets(handle, state.demoMode ? demoTeamAbbrev : teamHint, state.demoMode);
-    renderTweetResults(refs, results);
-    if (results.length === 0) showToast(refs, "No tweets found for that handle.");
-  } catch (e) {
-    console.error("searchTweets error:", e);
-    refs.tweetResultsContainer.innerHTML = `<p class="no-data">${(e as Error).message}</p>`;
-  }
-}
-
-function renderTweetResults(refs: AppRefs, results: TweetSearchResult[]): void {
-  refs.tweetResultsContainer.innerHTML = "";
-
-  if (results.length === 0) {
-    refs.tweetResultsContainer.innerHTML = `<p class="no-data">No results.</p>`;
-    return;
-  }
-
-  results.forEach(r => {
-    const item = document.createElement("div");
-    item.className = "tweet-result-item";
-
-    const p = document.createElement("p");
-    p.innerHTML = `<strong>${r.title}</strong>${r.snippet}`;
-    item.appendChild(p);
-
-    const addBtn = document.createElement("button");
-    addBtn.className = "add-tweet-btn";
-    addBtn.textContent = "Add";
-    addBtn.addEventListener("click", () => addTweet(refs, r.url));
-
-    item.appendChild(addBtn);
-    refs.tweetResultsContainer.appendChild(item);
-  });
-}
-
 async function addTweet(refs: AppRefs, url: string): Promise<void> {
   if (state.selectedTweets.some(t => t.url === url)) { showToast(refs, "Already added!"); return; }
 
@@ -558,7 +513,6 @@ function init(): void {
   refs.addQuoteBtn.addEventListener("click", () => addQuote(refs));
 
   // Media tweets
-  refs.searchTweetsBtn.addEventListener("click", () => searchAndRenderTweets(refs));
   refs.addTweetUrlBtn.addEventListener("click", () => {
     const url = refs.tweetUrlInput.value.trim();
     if (!url) { showToast(refs, "Paste a tweet URL first!"); return; }
