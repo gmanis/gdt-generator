@@ -1,5 +1,6 @@
 import { TweetSearchResult, TweetEmbed } from "./types";
 import { fetchWithProxy } from "./proxy";
+import { fetchOwnApiJson } from "./ownApi";
 import { MOCK_TWEET_RESULTS, MOCK_TWEET_EMBEDS } from "./mockData";
 
 const TWEET_URL_PATTERN = /^https:\/\/(?:twitter\.com|x\.com)\/[^/]+\/status\/\d+/;
@@ -33,13 +34,7 @@ export async function searchTweets(
   if (!cleanHandle) return [];
 
   const query = `site:x.com/${cleanHandle} ${teamHint}`.trim();
-  const res = await fetch(`/api/tweet-search?q=${encodeURIComponent(query)}`);
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.error || `Tweet search failed (${res.status})`);
-  }
-
+  const data = await fetchOwnApiJson<{ results: TweetSearchResult[] }>(`/api/tweet-search?q=${encodeURIComponent(query)}`);
   return data.results || [];
 }
 

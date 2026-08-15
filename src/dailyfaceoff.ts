@@ -1,5 +1,6 @@
 import { DailyFaceoffLines } from "./types";
 import { MOCK_DAILYFACEOFF_LINES } from "./mockData";
+import { fetchOwnApiJson } from "./ownApi";
 
 /**
  * Fetches projected line combinations for a team from our own /api/dailyfaceoff
@@ -14,12 +15,5 @@ export async function fetchDailyFaceoffLines(teamAbbrev: string, demoMode: boole
     throw new Error(`No demo line data for ${teamAbbrev}.`);
   }
 
-  const res = await fetch(`/api/dailyfaceoff?team=${encodeURIComponent(teamAbbrev)}`);
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.error || `DailyFaceoff fetch failed (${res.status})`);
-  }
-
-  return data;
+  return fetchOwnApiJson<DailyFaceoffLines>(`/api/dailyfaceoff?team=${encodeURIComponent(teamAbbrev)}`);
 }
