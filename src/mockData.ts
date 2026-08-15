@@ -213,7 +213,7 @@ export const MOCK_TWEET_RESULTS: Record<string, TweetSearchResult[]> = {
     {
       url: "https://x.com/DevilsBeatDemo/status/1000000000000000001",
       title: "Devils Beat Demo (@DevilsBeatDemo) on X",
-      snippet: "Keefe confirms Markstrom gets the start tonight against Boston. Lineup mostly steady heading into puck drop."
+      snippet: "Keefe confirms Markstrom gets the start tonight against the Rangers. Lineup mostly steady heading into puck drop."
     },
     {
       url: "https://x.com/DevilsBeatDemo/status/1000000000000000002",
@@ -235,8 +235,8 @@ export const MOCK_TWEET_EMBEDS: Record<string, TweetEmbed> = {
     url: "https://x.com/DevilsBeatDemo/status/1000000000000000001",
     authorName: "Devils Beat Demo",
     authorUrl: "https://x.com/DevilsBeatDemo",
-    text: "Keefe confirms Markstrom gets the start tonight against Boston. Lineup mostly steady heading into puck drop.",
-    html: `<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Keefe confirms Markstrom gets the start tonight against Boston. Lineup mostly steady heading into puck drop.</p>&mdash; Devils Beat Demo (@DevilsBeatDemo) <a href="https://x.com/DevilsBeatDemo/status/1000000000000000001">March 10, 2026</a></blockquote>`
+    text: "Keefe confirms Markstrom gets the start tonight against the Rangers. Lineup mostly steady heading into puck drop.",
+    html: `<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Keefe confirms Markstrom gets the start tonight against the Rangers. Lineup mostly steady heading into puck drop.</p>&mdash; Devils Beat Demo (@DevilsBeatDemo) <a href="https://x.com/DevilsBeatDemo/status/1000000000000000001">March 10, 2026</a></blockquote>`
   },
   "https://x.com/DevilsBeatDemo/status/1000000000000000002": {
     url: "https://x.com/DevilsBeatDemo/status/1000000000000000002",

@@ -168,6 +168,34 @@ async function loadGamesList(refs: AppRefs): Promise<void> {
   }
 }
 
+/**
+ * Fetches DailyFaceoff lines for one team and applies them, syncing the
+ * lineup dropdowns and the (possibly hidden, if the import modal isn't open)
+ * status line. Shared by the manual "Fetch from DailyFaceoff" button and the
+ * automatic fetch that runs whenever a game is selected.
+ */
+async function fetchAndApplyDailyFaceoffLines(
+  refs: AppRefs,
+  team: "away" | "home",
+  teamAbbrev: string,
+): Promise<{ fLines: number; dPairs: number; goalies: number }> {
+  const lines = await fetchDailyFaceoffLines(teamAbbrev, state.demoMode);
+  const counts = applyDailyFaceoffLines(lines, team, state);
+  const container = team === "away" ? refs.awayLineupSlots : refs.homeLineupSlots;
+  syncLineupUI(container, state.lineups[team]);
+  refs.dailyFaceoffStatus.textContent = `${lines.sourceName} · updated ${new Date(lines.updatedAt).toLocaleDateString()}`;
+  return counts;
+}
+
+/** Best-effort auto-fetch: falls back silently to the roster-order auto-fill on failure. */
+async function autoFetchDailyFaceoffLines(refs: AppRefs, team: "away" | "home", teamAbbrev: string): Promise<void> {
+  try {
+    await fetchAndApplyDailyFaceoffLines(refs, team, teamAbbrev);
+  } catch (e) {
+    console.warn(`DailyFaceoff auto-fetch failed for ${teamAbbrev}:`, e);
+  }
+}
+
 async function loadSelectedGameDetails(refs: AppRefs): Promise<void> {
   if (!state.selectedGame) return;
   const game = state.selectedGame;
@@ -193,6 +221,13 @@ async function loadSelectedGameDetails(refs: AppRefs): Promise<void> {
     state.rosters.home = rosterHome;
     renderLineupSlots("away", rosterAway, refs.awayLineupSlots, state);
     renderLineupSlots("home", rosterHome, refs.homeLineupSlots, state);
+
+    // Best-effort: auto-populate projected lines from DailyFaceoff for both
+    // teams, falling back to the roster-order auto-fill above if it fails.
+    await Promise.all([
+      autoFetchDailyFaceoffLines(refs, "away", game.awayTeam.abbrev),
+      autoFetchDailyFaceoffLines(refs, "home", game.homeTeam.abbrev),
+    ]);
 
     state.standings = await provider.fetchStandings(state.demoMode);
 
@@ -553,11 +588,7 @@ function init(): void {
 
     refs.dailyFaceoffStatus.textContent = "Fetching…";
     try {
-      const lines = await fetchDailyFaceoffLines(teamAbbrev, state.demoMode);
-      const { fLines, dPairs, goalies } = applyDailyFaceoffLines(lines, team, state);
-      const container = team === "away" ? refs.awayLineupSlots : refs.homeLineupSlots;
-      syncLineupUI(container, state.lineups[team]);
-      refs.dailyFaceoffStatus.textContent = `${lines.sourceName} · updated ${new Date(lines.updatedAt).toLocaleDateString()}`;
+      const { fLines, dPairs, goalies } = await fetchAndApplyDailyFaceoffLines(refs, team, teamAbbrev);
       showToast(refs, `Fetched ${fLines} F lines, ${dPairs} D pairs, ${goalies} goalies from DailyFaceoff!`);
       closeModal(refs.importModal);
     } catch (e) {
