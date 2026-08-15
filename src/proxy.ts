@@ -7,8 +7,11 @@ import { CacheManager } from "./cache";
 export function getProxyUrl(targetUrl: string): string {
   const proxySetting = localStorage.getItem("gtg_settings_cors_proxy");
   if (proxySetting === null) {
-    // Default to corsproxy.io
-    return `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+    // Default to this app's own deployed proxy endpoint (api/nhl-proxy.ts) —
+    // same-origin, so no CORS problem to solve, and it's free on Vercel's
+    // Hobby plan. corsproxy.io (the old default) now blocks non-localhost
+    // usage entirely without a paid key, so it's no longer a viable default.
+    return `/api/nhl-proxy?url=${encodeURIComponent(targetUrl)}`;
   }
   if (!proxySetting.trim()) {
     return targetUrl; // Direct connection

@@ -25,7 +25,7 @@ function dateForMode(demoMode: boolean): string {
 
 function loadSettings(refs: AppRefs): void {
   const savedProxy = localStorage.getItem("gtg_settings_cors_proxy");
-  refs.corsProxyInput.value = savedProxy ?? "https://corsproxy.io/?";
+  refs.corsProxyInput.value = savedProxy ?? "/api/nhl-proxy?url=";
 
   if (!localStorage.getItem("gtg_settings_templates")) {
     localStorage.setItem("gtg_settings_templates", JSON.stringify(DEFAULT_TEMPLATES));
