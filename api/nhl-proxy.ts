@@ -21,19 +21,21 @@ async function fetchFollowingRedirects(
   url: string,
   headers: Record<string, string>,
   maxRedirects = 5,
-): Promise<{ res: Response; chain: string[] }> {
+): Promise<{ res: Response; chain: string[]; rawLocations: (string | null)[] }> {
   let currentUrl = url;
   const chain = [url];
+  const rawLocations: (string | null)[] = [];
   for (let i = 0; i < maxRedirects; i++) {
     const res = await fetch(currentUrl, { headers, redirect: 'manual' });
     if (res.status >= 300 && res.status < 400) {
       const location = res.headers.get('location');
-      if (!location) return { res, chain };
+      rawLocations.push(location);
+      if (!location) return { res, chain, rawLocations };
       currentUrl = new URL(location, currentUrl).toString();
       chain.push(currentUrl);
       continue;
     }
-    return { res, chain };
+    return { res, chain, rawLocations };
   }
   throw new Error(`Too many redirects fetching ${url}`);
 }
@@ -53,7 +55,7 @@ export default async function handler(request: Request) {
       return jsonResponse({ error: 'Hostname not allowed' }, 403);
     }
 
-    const { res: fetchRes, chain } = await fetchFollowingRedirects(url, {
+    const { res: fetchRes, chain, rawLocations } = await fetchFollowingRedirects(url, {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       'Accept': 'application/json'
     });
@@ -65,6 +67,7 @@ export default async function handler(request: Request) {
       return jsonResponse({
         error: `Target server returned ${fetchRes.status} ${fetchRes.statusText}`,
         debugChain: chain,
+        debugRawLocations: rawLocations,
         debugFinalHeaders: Object.fromEntries(fetchRes.headers.entries()),
         debugBody: bodyText.slice(0, 500),
       }, fetchRes.status);
