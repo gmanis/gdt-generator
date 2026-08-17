@@ -178,7 +178,7 @@ export const TEMPLATE_PLACEHOLDERS: { key: string; description: string }[] = [
   { key: "game_date",           description: "Formatted game date" },
   { key: "game_time",           description: "Formatted game time" },
   { key: "tv_broadcasts",       description: "TV broadcast networks" },
-  { key: "team_comparison_table", description: "Record/PP%/PK% comparison table" },
+  { key: "team_comparison_table", description: "Record/PP%/PK% comparison table, plus each team's season points/goals/assists leaders" },
   { key: "standings_table",     description: "Division standings table" },
   { key: "away_last5_skaters_table", description: "Away top 5 skaters by points over their last 5 games" },
   { key: "home_last5_skaters_table", description: "Home top 5 skaters by points over their last 5 games" },

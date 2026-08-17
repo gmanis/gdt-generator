@@ -2,7 +2,7 @@ import { AppRefs } from "./refs";
 import { AppState } from "./state";
 import { BbCodeRenderer, MarkdownRenderer, HtmlRenderer, FormatRenderer, HeadshotMap } from "./renderers";
 import { DEFAULT_TEMPLATES, TemplateEngine } from "./templates";
-import { Roster } from "./types";
+import { Roster, StatLeader } from "./types";
 import { resolveStartingGoalie, StartingGoalieInfo } from "./goalieCompare";
 import { showToast } from "./ui";
 
@@ -81,6 +81,8 @@ function buildValues(state: AppState, renderer: FormatRenderer): Record<string, 
   // Team comparison
   const { home: hSt, away: aSt } = stats;
   if (hSt && aSt) {
+    const formatLeader = (l: StatLeader | null | undefined): string => l ? `${l.name} (${l.value})` : "N/A";
+
     const compRows = [
       ["Record",     `${aSt.wins}-${aSt.losses}-${aSt.otLosses}`,                  `${hSt.wins}-${hSt.losses}-${hSt.otLosses}`],
       ["Points",     String(aSt.points),                                             String(hSt.points)],
@@ -88,6 +90,9 @@ function buildValues(state: AppState, renderer: FormatRenderer): Record<string, 
       ["GA / Game",  (aSt.goalsAgainst / aSt.gamesPlayed).toFixed(2),               (hSt.goalsAgainst / hSt.gamesPlayed).toFixed(2)],
       ["PP %",       `${aSt.powerPlayPct}%`,                                         `${hSt.powerPlayPct}%`],
       ["PK %",       `${aSt.penaltyKillPct}%`,                                       `${hSt.penaltyKillPct}%`],
+      ["Points Leader",  formatLeader(lastFive.away?.seasonLeaders.points),  formatLeader(lastFive.home?.seasonLeaders.points)],
+      ["Goals Leader",   formatLeader(lastFive.away?.seasonLeaders.goals),   formatLeader(lastFive.home?.seasonLeaders.goals)],
+      ["Assists Leader", formatLeader(lastFive.away?.seasonLeaders.assists), formatLeader(lastFive.home?.seasonLeaders.assists)],
     ];
     values["team_comparison_table"] = renderer.renderTable(
       ["Stat", game.awayTeam.abbrev, game.homeTeam.abbrev],

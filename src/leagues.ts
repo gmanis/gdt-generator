@@ -1,4 +1,4 @@
-import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, TeamStats, TeamSummary, Player, LastFiveGamesStats, SkaterLastFiveStats, GoalieSeasonStats } from "./types";
+import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, TeamStats, TeamSummary, Player, LastFiveGamesStats, GoalieSeasonStats, StatLeader, SeasonStatLeaders } from "./types";
 import { CacheManager } from "./cache";
 import { fetchWithProxy } from "./proxy";
 import * as mock from "./mockData";
@@ -310,33 +310,48 @@ export class NhlLeagueProvider implements LeagueProvider {
 
   /**
    * Ranked "hot list" for a team: top skaters by points over their last 5
-   * games, and every active goalie's record/GAA/SV% for the full season —
-   * a goalie's last 5 games often includes only 1-2 starts, too small a
-   * sample to be a meaningful stat, so goalies use season-to-date totals
-   * instead (both pulled from the same player landing endpoint).
+   * games, season-to-date points/goals/assists leaders, and every active
+   * goalie's record/GAA/SV% for the full season — a goalie's last 5 games
+   * often includes only 1-2 starts, too small a sample to be a meaningful
+   * stat, so goalies use season-to-date totals instead (all pulled from the
+   * same player landing endpoint).
    */
   async fetchLastFiveGamesStats(teamAbbrev: string, roster: Roster, demoMode: boolean): Promise<LastFiveGamesStats> {
     if (demoMode) {
-      return mock.MOCK_LAST_FIVE[teamAbbrev] || { skaters: [], goalies: [] };
+      return mock.MOCK_LAST_FIVE[teamAbbrev] || { skaters: [], goalies: [], seasonLeaders: { points: null, goals: null, assists: null } };
     }
 
     const skaterPlayers = [...roster.forwards, ...roster.defensemen];
 
-    const [skaterResults, goalieResults] = await Promise.all([
-      Promise.all(skaterPlayers.map(p => this.fetchPlayerLastFiveSkater(p))),
+    const [skaterTotals, goalieResults] = await Promise.all([
+      Promise.all(skaterPlayers.map(p => this.fetchPlayerSkaterTotals(p))),
       Promise.all(roster.goalies.map(p => this.fetchPlayerSeasonGoalieStats(p))),
     ]);
 
-    const skaters = skaterResults
-      .filter((s): s is SkaterLastFiveStats => s !== null && s.gamesPlayed > 0)
+    const validSkaters = skaterTotals.filter((s): s is NonNullable<typeof s> => s !== null);
+
+    const skaters = validSkaters
+      .filter(s => s.last5.gamesPlayed > 0)
+      .map(s => ({ playerId: s.playerId, name: s.name, positionCode: s.positionCode, ...s.last5 }))
       .sort((a, b) => b.points - a.points)
       .slice(0, 5);
+
+    const leaderFor = (pick: (s: NonNullable<typeof skaterTotals[number]>) => number): StatLeader | null => {
+      const ranked = validSkaters.filter(s => pick(s) > 0).sort((a, b) => pick(b) - pick(a));
+      return ranked.length > 0 ? { name: ranked[0].name, value: pick(ranked[0]) } : null;
+    };
+
+    const seasonLeaders: SeasonStatLeaders = {
+      points: leaderFor(s => s.season.points),
+      goals: leaderFor(s => s.season.goals),
+      assists: leaderFor(s => s.season.assists),
+    };
 
     const goalies = goalieResults
       .filter((g): g is GoalieSeasonStats => g !== null && g.gamesPlayed > 0)
       .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
 
-    return { skaters, goalies };
+    return { skaters, goalies, seasonLeaders };
   }
 
   private async fetchPlayerLanding(playerId: number): Promise<any> {
@@ -346,28 +361,40 @@ export class NhlLeagueProvider implements LeagueProvider {
     return fetchWithProxy<any>(url, cacheKey, ttl);
   }
 
-  private async fetchPlayerLastFiveSkater(p: Player): Promise<SkaterLastFiveStats | null> {
+  private async fetchPlayerSkaterTotals(p: Player): Promise<{
+    playerId: number;
+    name: string;
+    positionCode: string;
+    last5: { gamesPlayed: number; goals: number; assists: number; points: number };
+    season: { goals: number; assists: number; points: number };
+  } | null> {
     try {
       const data = await this.fetchPlayerLanding(p.id);
       const games: any[] = data.last5Games || [];
-      const totals = games.reduce(
+      const last5 = games.reduce(
         (acc, g) => ({
+          gamesPlayed: acc.gamesPlayed + 1,
           goals: acc.goals + (g.goals || 0),
           assists: acc.assists + (g.assists || 0),
           points: acc.points + (g.points || 0),
         }),
-        { goals: 0, assists: 0, points: 0 },
+        { gamesPlayed: 0, goals: 0, assists: 0, points: 0 },
       );
+      const season = data.featuredStats?.regularSeason?.subSeason;
 
       return {
         playerId: p.id,
         name: `${p.firstName} ${p.lastName}`,
         positionCode: p.positionCode,
-        gamesPlayed: games.length,
-        ...totals,
+        last5,
+        season: {
+          goals: season?.goals ?? 0,
+          assists: season?.assists ?? 0,
+          points: season?.points ?? 0,
+        },
       };
     } catch (e) {
-      console.warn(`fetchPlayerLastFiveSkater failed for player ${p.id}:`, e);
+      console.warn(`fetchPlayerSkaterTotals failed for player ${p.id}:`, e);
       return null;
     }
   }

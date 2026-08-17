@@ -103,9 +103,24 @@ export interface GoalieSeasonStats {
   savePct: number;
 }
 
+export interface StatLeader {
+  name: string;
+  value: number;
+}
+
+// A team's season-to-date points/goals/assists leaders — not necessarily the
+// same player in each category, and separate from the last-5-games skaters
+// list above (which ranks by last-5 points, not season totals).
+export interface SeasonStatLeaders {
+  points: StatLeader | null;
+  goals: StatLeader | null;
+  assists: StatLeader | null;
+}
+
 export interface LastFiveGamesStats {
   skaters: SkaterLastFiveStats[];
   goalies: GoalieSeasonStats[];
+  seasonLeaders: SeasonStatLeaders;
 }
 
 export interface LineupConfig {

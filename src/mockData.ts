@@ -246,6 +246,11 @@ export const MOCK_LAST_FIVE: Record<string, LastFiveGamesStats> = {
       { playerId: 8474593, name: "Jacob Markstrom", gamesPlayed: 40, wins: 22, losses: 14, otLosses: 4, goalsAgainstAvg: 2.45, savePct: 0.905 },
       { playerId: 8474596, name: "Jake Allen", gamesPlayed: 22, wins: 13, losses: 7, otLosses: 1, goalsAgainstAvg: 2.68, savePct: 0.897 },
     ],
+    seasonLeaders: {
+      points: { name: "Jack Hughes", value: 72 },
+      goals: { name: "Jack Hughes", value: 32 },
+      assists: { name: "Jesper Bratt", value: 46 },
+    },
   },
   NYR: {
     skaters: [
@@ -258,6 +263,11 @@ export const MOCK_LAST_FIVE: Record<string, LastFiveGamesStats> = {
     goalies: [
       { playerId: 8478048, name: "Igor Shesterkin", gamesPlayed: 55, wins: 34, losses: 16, otLosses: 5, goalsAgainstAvg: 2.02, savePct: 0.921 },
     ],
+    seasonLeaders: {
+      points: { name: "J.T. Miller", value: 70 },
+      goals: { name: "Mika Zibanejad", value: 30 },
+      assists: { name: "Adam Fox", value: 48 },
+    },
   },
 };
 
