@@ -494,6 +494,65 @@ select:focus, input[type="date"]:focus, input[type="text"]:focus, textarea:focus
   text-align: center;
 }
 
+.starting-goalies {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.goalie-profile {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+  min-width: 0;
+}
+
+.goalie-photo {
+  height: 56px;
+  width: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  margin-bottom: 0.5rem;
+}
+
+.goalie-photo-placeholder {
+  background: var(--bg-card);
+}
+
+.goalie-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.goalie-stat-line {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.goalie-backup {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+}
+
+.goalie-vs {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
 /* Right Panel Elements */
 .preview-tabs {
   display: flex;

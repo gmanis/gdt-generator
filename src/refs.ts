@@ -44,6 +44,7 @@ export interface AppRefs {
   homeLastFiveContainer: HTMLDivElement;
   awayLastFiveTitle: HTMLElement;
   homeLastFiveTitle: HTMLElement;
+  startingGoaliesContainer: HTMLDivElement;
 
   // Template editor
   templateStyleSelect: HTMLSelectElement;

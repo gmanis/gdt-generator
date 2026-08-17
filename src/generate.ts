@@ -3,6 +3,7 @@ import { AppState } from "./state";
 import { BbCodeRenderer, MarkdownRenderer, HtmlRenderer, FormatRenderer, HeadshotMap } from "./renderers";
 import { DEFAULT_TEMPLATES, TemplateEngine } from "./templates";
 import { Roster } from "./types";
+import { resolveStartingGoalie, StartingGoalieInfo } from "./goalieCompare";
 import { showToast } from "./ui";
 
 // ─── Headshot lookup ──────────────────────────────────────────────────────────
@@ -24,6 +25,10 @@ function getRenderer(style: string): FormatRenderer {
 }
 
 // ─── Template values builder ──────────────────────────────────────────────────
+
+function formatGoalieStat(g: StartingGoalieInfo, pick: (s: NonNullable<StartingGoalieInfo["stats"]>) => string): string {
+  return g.stats ? pick(g.stats) : "N/A";
+}
 
 function buildValues(state: AppState, renderer: FormatRenderer): Record<string, string> {
   const { selectedGame: game, standings, stats, lastFive, lineups, quotes, rosters } = state;
@@ -92,22 +97,10 @@ function buildValues(state: AppState, renderer: FormatRenderer): Record<string, 
     values["team_comparison_table"] = renderer.renderBold("Stats comparison unavailable.");
   }
 
-  // Top skaters by points over their last 5 games, and every active
-  // goalie's season-to-date record/GAA/SV% (a last-5 sample is too small to
-  // be a meaningful goalie stat — often just 1-2 starts).
+  // Top skaters by points over their last 5 games
   const skaterRows = (s: typeof lastFive.home) =>
     (s?.skaters ?? []).map(p => [p.name, p.positionCode, String(p.gamesPlayed), String(p.goals), String(p.assists), String(p.points)]);
-  const goalieRows = (s: typeof lastFive.home) =>
-    (s?.goalies ?? []).map(g => [
-      g.name,
-      String(g.gamesPlayed),
-      `${g.wins}-${g.losses}-${g.otLosses}`,
-      g.goalsAgainstAvg.toFixed(2),
-      g.savePct.toFixed(3).replace(/^0/, ""),
-    ]);
-
   const skaterHeaders = ["Player", "Pos", "GP", "G", "A", "PTS"];
-  const goalieHeaders = ["Goalie", "GP", "W-L-OTL", "GAA", "SV%"];
 
   values["away_last5_skaters_table"] = skaterRows(lastFive.away).length > 0
     ? renderer.renderTable(skaterHeaders, skaterRows(lastFive.away))
@@ -115,12 +108,30 @@ function buildValues(state: AppState, renderer: FormatRenderer): Record<string, 
   values["home_last5_skaters_table"] = skaterRows(lastFive.home).length > 0
     ? renderer.renderTable(skaterHeaders, skaterRows(lastFive.home))
     : renderer.renderItalic("No last-5-games stats available.");
-  values["away_goalies_season_table"] = goalieRows(lastFive.away).length > 0
-    ? renderer.renderTable(goalieHeaders, goalieRows(lastFive.away))
-    : renderer.renderItalic("No goalie stats available.");
-  values["home_goalies_season_table"] = goalieRows(lastFive.home).length > 0
-    ? renderer.renderTable(goalieHeaders, goalieRows(lastFive.home))
-    : renderer.renderItalic("No goalie stats available.");
+
+  // Starting goalie head-to-head: whoever is set as the starter in the
+  // Lineup Builder for each team, with their photo, season stats, and backup
+  // (season-to-date, not last-5 — a goalie's last 5 games are often just 1-2
+  // starts, too small a sample to be meaningful).
+  const awayGoalie = resolveStartingGoalie(lineups.away.goalies, rosters.away, lastFive.away?.goalies ?? []);
+  const homeGoalie = resolveStartingGoalie(lineups.home.goalies, rosters.home, lastFive.home?.goalies ?? []);
+
+  const photoCell = (g: StartingGoalieInfo) => g.headshot ? renderer.renderImage(g.headshot, g.name, 64) : "";
+
+  const goalieComparisonRows = [
+    ["", photoCell(awayGoalie), photoCell(homeGoalie)],
+    ["Goalie", awayGoalie.name || "TBD", homeGoalie.name || "TBD"],
+    ["GP", formatGoalieStat(awayGoalie, s => String(s.gamesPlayed)), formatGoalieStat(homeGoalie, s => String(s.gamesPlayed))],
+    ["Record", formatGoalieStat(awayGoalie, s => `${s.wins}-${s.losses}-${s.otLosses}`), formatGoalieStat(homeGoalie, s => `${s.wins}-${s.losses}-${s.otLosses}`)],
+    ["GAA", formatGoalieStat(awayGoalie, s => s.goalsAgainstAvg.toFixed(2)), formatGoalieStat(homeGoalie, s => s.goalsAgainstAvg.toFixed(2))],
+    ["SV%", formatGoalieStat(awayGoalie, s => s.savePct.toFixed(3).replace(/^0/, "")), formatGoalieStat(homeGoalie, s => s.savePct.toFixed(3).replace(/^0/, ""))],
+    ["Backup", awayGoalie.backupName || "TBD", homeGoalie.backupName || "TBD"],
+  ];
+
+  values["starting_goalies_table"] = renderer.renderTable(
+    ["Stat", game.awayTeam.abbrev, game.homeTeam.abbrev],
+    goalieComparisonRows,
+  );
 
   // Lineups — plain text, or with headshots inlined per player
   values["away_lineup"] = renderer.renderLineup(lineups.away);

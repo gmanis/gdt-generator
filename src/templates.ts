@@ -16,13 +16,12 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 [B][SIZE=5]Team Stat Leaders[/SIZE][/B]
 [B]{{away_team}} Top Skaters (Last 5 Games)[/B]
 {{away_last5_skaters_table}}
-[B]{{away_team}} Goalies (Season)[/B]
-{{away_goalies_season_table}}
 
 [B]{{home_team}} Top Skaters (Last 5 Games)[/B]
 {{home_last5_skaters_table}}
-[B]{{home_team}} Goalies (Season)[/B]
-{{home_goalies_season_table}}
+
+[B]Starting Goalies[/B]
+{{starting_goalies_table}}
 
 [HR][/HR]
 
@@ -75,13 +74,12 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 
 ### {{away_team}} Top Skaters (Last 5 Games)
 {{away_last5_skaters_table}}
-### {{away_team}} Goalies (Season)
-{{away_goalies_season_table}}
 
 ### {{home_team}} Top Skaters (Last 5 Games)
 {{home_last5_skaters_table}}
-### {{home_team}} Goalies (Season)
-{{home_goalies_season_table}}
+
+### Starting Goalies
+{{starting_goalies_table}}
 
 ---
 
@@ -128,16 +126,15 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
     <div>
       <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">{{away_team}} Top Skaters (Last 5 Games)</h3>
       {{away_last5_skaters_table}}
-      <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">{{away_team}} Goalies (Season)</h3>
-      {{away_goalies_season_table}}
     </div>
     <div>
       <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">{{home_team}} Top Skaters (Last 5 Games)</h3>
       {{home_last5_skaters_table}}
-      <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">{{home_team}} Goalies (Season)</h3>
-      {{home_goalies_season_table}}
     </div>
   </div>
+
+  <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-top: 20px;">Starting Goalies</h3>
+  {{starting_goalies_table}}
 
   <hr style="border: 0; border-top: 1px solid #ccc; margin: 30px 0;" />
 
@@ -185,8 +182,7 @@ export const TEMPLATE_PLACEHOLDERS: { key: string; description: string }[] = [
   { key: "standings_table",     description: "Division standings table" },
   { key: "away_last5_skaters_table", description: "Away top 5 skaters by points over their last 5 games" },
   { key: "home_last5_skaters_table", description: "Home top 5 skaters by points over their last 5 games" },
-  { key: "away_goalies_season_table", description: "Away goalies' season-to-date record/GAA/SV%" },
-  { key: "home_goalies_season_table", description: "Home goalies' season-to-date record/GAA/SV%" },
+  { key: "starting_goalies_table", description: "Starting goalie head-to-head: photo, season stats, and backup for each team" },
   { key: "away_lineup",         description: "Away projected lineup (plain text)" },
   { key: "home_lineup",         description: "Home projected lineup (plain text)" },
   { key: "away_lineup_images",  description: "Away lineup with player photos inlined" },

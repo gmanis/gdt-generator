@@ -38,6 +38,7 @@ export function renderLineupSlots(
   roster: Roster,
   container: HTMLElement,
   state: AppState,
+  onGoalieChange?: () => void,
 ): void {
   container.innerHTML = "";
 
@@ -116,6 +117,7 @@ export function renderLineupSlots(
     }
     select.addEventListener("change", e => {
       lineup.goalies[g] = (e.target as HTMLSelectElement).value;
+      onGoalieChange?.();
     });
     gRow.appendChild(select);
   }

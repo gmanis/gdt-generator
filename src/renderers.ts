@@ -15,6 +15,7 @@ export interface FormatRenderer {
   renderTable(headers: string[], rows: string[][]): string;
   renderColor(text: string, color: string): string;
   renderSize(text: string, size: string): string;
+  renderImage(url: string, alt: string, size?: number): string;
   renderLineup(lineup: LineupConfig): string;
   renderLineupWithPhotos(lineup: LineupConfig, headshots: HeadshotMap): string;
   renderQuote(author: string, role: string, text: string): string;
@@ -44,6 +45,10 @@ export class BbCodeRenderer implements FormatRenderer {
   renderSize(text: string, size: string): string {
     // XenForo sizes are usually 1-7 or direct px. We assume standard 1-7 size scale where 4 is default, 5 is large, 6 is huge.
     return `[SIZE=${size}]${text}[/SIZE]`;
+  }
+
+  renderImage(url: string, _alt: string, size = 48): string {
+    return `[IMG width=${size} height=${size}]${url}[/IMG]`;
   }
 
   renderTable(headers: string[], rows: string[][]): string {
@@ -148,6 +153,10 @@ export class MarkdownRenderer implements FormatRenderer {
     return `**${text}**`;
   }
 
+  renderImage(url: string, alt: string, _size = 48): string {
+    return `![${alt}](${url})`;
+  }
+
   renderTable(headers: string[], rows: string[][]): string {
     let out = "\n";
 
@@ -238,6 +247,10 @@ export class HtmlRenderer implements FormatRenderer {
     const sizeNum = parseInt(size, 10) || 4;
     const pxSize = sizeNum === 7 ? "32px" : sizeNum === 6 ? "24px" : sizeNum === 5 ? "20px" : "16px";
     return `<span style="font-size: ${pxSize};">${text}</span>`;
+  }
+
+  renderImage(url: string, alt: string, size = 48): string {
+    return `<img src="${url}" alt="${alt}" style="height: ${size}px; width: ${size}px; border-radius: 50%; object-fit: cover;">`;
   }
 
   renderTable(headers: string[], rows: string[][]): string {

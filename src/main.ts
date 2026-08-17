@@ -11,6 +11,7 @@ import { NHL_TEAMS } from "./teams";
 import { fetchTweetEmbed, isTweetUrl } from "./tweets";
 import { TEMPLATE_PLACEHOLDERS } from "./templates";
 import { fetchDailyFaceoffLines } from "./dailyfaceoff";
+import { resolveStartingGoalie, StartingGoalieInfo } from "./goalieCompare";
 
 const provider = new NhlLeagueProvider();
 
@@ -141,6 +142,7 @@ function clearGameDetails(refs: AppRefs): void {
   refs.homeNewsContainer.innerHTML = `<p class="no-data">No news loaded</p>`;
   refs.awayLastFiveContainer.innerHTML = `<p class="no-data">No stats loaded</p>`;
   refs.homeLastFiveContainer.innerHTML = `<p class="no-data">No stats loaded</p>`;
+  refs.startingGoaliesContainer.innerHTML = `<p class="no-data">No stats loaded</p>`;
   refs.awayLineupSlots.innerHTML = "";
   refs.homeLineupSlots.innerHTML = "";
 }
@@ -201,6 +203,7 @@ async function fetchAndApplyDailyFaceoffLines(
   const counts = applyDailyFaceoffLines(lines, team, state);
   const container = team === "away" ? refs.awayLineupSlots : refs.homeLineupSlots;
   syncLineupUI(container, state.lineups[team]);
+  renderStartingGoalies(refs);
   refs.dailyFaceoffStatus.textContent = `${lines.sourceName} · updated ${new Date(lines.updatedAt).toLocaleDateString()}`;
   return counts;
 }
@@ -239,8 +242,9 @@ async function loadSelectedGameDetails(refs: AppRefs): Promise<void> {
     ]);
     state.rosters.away = rosterAway;
     state.rosters.home = rosterHome;
-    renderLineupSlots("away", rosterAway, refs.awayLineupSlots, state);
-    renderLineupSlots("home", rosterHome, refs.homeLineupSlots, state);
+    renderLineupSlots("away", rosterAway, refs.awayLineupSlots, state, () => renderStartingGoalies(refs));
+    renderLineupSlots("home", rosterHome, refs.homeLineupSlots, state, () => renderStartingGoalies(refs));
+    renderStartingGoalies(refs);
 
     // Best-effort: auto-populate projected lines from DailyFaceoff for both
     // teams, falling back to the roster-order auto-fill above if it fails.
@@ -276,6 +280,7 @@ async function loadSelectedGameDetails(refs: AppRefs): Promise<void> {
       state.lastFive.home = lastFiveHome;
       renderLastFive(refs, "away", lastFiveAway);
       renderLastFive(refs, "home", lastFiveHome);
+      renderStartingGoalies(refs);
     } catch (e) {
       console.warn("fetchLastFiveGamesStats failed:", e);
     }
@@ -369,32 +374,72 @@ function renderLastFive(refs: AppRefs, team: "away" | "home", data: LastFiveGame
   const container = team === "away" ? refs.awayLastFiveContainer : refs.homeLastFiveContainer;
   container.innerHTML = "";
 
-  if (data.skaters.length === 0 && data.goalies.length === 0) {
+  if (data.skaters.length === 0) {
     container.innerHTML = `<p class="no-data">No stats found</p>`;
     return;
   }
 
-  if (data.skaters.length > 0) {
-    container.appendChild(buildStatTable(
-      "Top Skaters (Last 5 Games)",
-      ["Player", "GP", "G", "A", "PTS"],
-      data.skaters.map(p => [p.name, String(p.gamesPlayed), String(p.goals), String(p.assists), String(p.points)]),
-    ));
+  container.appendChild(buildStatTable(
+    "Top Skaters (Last 5 Games)",
+    ["Player", "GP", "G", "A", "PTS"],
+    data.skaters.map(p => [p.name, String(p.gamesPlayed), String(p.goals), String(p.assists), String(p.points)]),
+  ));
+}
+
+// ─── Starting goalie comparison ───────────────────────────────────────────────
+
+function buildGoalieProfile(g: StartingGoalieInfo): HTMLDivElement {
+  const box = document.createElement("div");
+  box.className = "goalie-profile";
+
+  if (g.headshot) {
+    const img = document.createElement("img");
+    img.className = "goalie-photo";
+    img.src = g.headshot;
+    img.alt = g.name;
+    box.appendChild(img);
+  } else {
+    const placeholder = document.createElement("div");
+    placeholder.className = "goalie-photo goalie-photo-placeholder";
+    box.appendChild(placeholder);
   }
 
-  if (data.goalies.length > 0) {
-    container.appendChild(buildStatTable(
-      "Goalies (Season)",
-      ["Goalie", "GP", "Rec", "GAA", "SV%"],
-      data.goalies.map(g => [
-        g.name,
-        String(g.gamesPlayed),
-        `${g.wins}-${g.losses}-${g.otLosses}`,
-        g.goalsAgainstAvg.toFixed(2),
-        g.savePct.toFixed(3).replace(/^0/, ""),
-      ]),
-    ));
-  }
+  const name = document.createElement("div");
+  name.className = "goalie-name";
+  name.textContent = g.name || "TBD";
+  box.appendChild(name);
+
+  const statLine = document.createElement("div");
+  statLine.className = "goalie-stat-line";
+  statLine.textContent = g.stats
+    ? `${g.stats.gamesPlayed} GP, ${g.stats.wins}-${g.stats.losses}-${g.stats.otLosses}, ${g.stats.goalsAgainstAvg.toFixed(2)} GAA, ${g.stats.savePct.toFixed(3).replace(/^0/, "")} SV%`
+    : "No season stats available";
+  box.appendChild(statLine);
+
+  const backup = document.createElement("div");
+  backup.className = "goalie-backup";
+  backup.textContent = `Backup: ${g.backupName || "TBD"}`;
+  box.appendChild(backup);
+
+  return box;
+}
+
+/** Re-renders the starter-vs-starter comparison from whatever's currently in state — called on initial load, on every goalie dropdown change, and once last-5 stats resolve. */
+function renderStartingGoalies(refs: AppRefs): void {
+  if (!state.selectedGame) return;
+
+  const awayGoalie = resolveStartingGoalie(state.lineups.away.goalies, state.rosters.away, state.lastFive.away?.goalies ?? []);
+  const homeGoalie = resolveStartingGoalie(state.lineups.home.goalies, state.rosters.home, state.lastFive.home?.goalies ?? []);
+
+  refs.startingGoaliesContainer.innerHTML = "";
+  refs.startingGoaliesContainer.appendChild(buildGoalieProfile(awayGoalie));
+
+  const vs = document.createElement("div");
+  vs.className = "goalie-vs";
+  vs.textContent = "VS";
+  refs.startingGoaliesContainer.appendChild(vs);
+
+  refs.startingGoaliesContainer.appendChild(buildGoalieProfile(homeGoalie));
 }
 
 // ─── Quotes ───────────────────────────────────────────────────────────────────
@@ -645,6 +690,7 @@ function init(): void {
     const { fLines, dPairs, goalies } = parseProjectedLines(rawText, team, state);
     const container = team === "away" ? refs.awayLineupSlots : refs.homeLineupSlots;
     syncLineupUI(container, state.lineups[team]);
+    renderStartingGoalies(refs);
     showToast(refs, `Imported ${fLines} F lines, ${dPairs} D pairs, ${goalies} goalies!`);
     closeModal(refs.importModal);
   });
