@@ -13,6 +13,19 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 
 [HR][/HR]
 
+[B][SIZE=5]Team Stat Leaders[/SIZE][/B]
+[B]{{away_team}} Top Skaters (Last 5 Games)[/B]
+{{away_last5_skaters_table}}
+[B]{{away_team}} Goalies (Season)[/B]
+{{away_goalies_season_table}}
+
+[B]{{home_team}} Top Skaters (Last 5 Games)[/B]
+{{home_last5_skaters_table}}
+[B]{{home_team}} Goalies (Season)[/B]
+{{home_goalies_season_table}}
+
+[HR][/HR]
+
 [B][SIZE=5]Lineups[/SIZE][/B]
 [TABLE]
 [TR]
@@ -58,6 +71,20 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 
 ---
 
+## Team Stat Leaders
+
+### {{away_team}} Top Skaters (Last 5 Games)
+{{away_last5_skaters_table}}
+### {{away_team}} Goalies (Season)
+{{away_goalies_season_table}}
+
+### {{home_team}} Top Skaters (Last 5 Games)
+{{home_last5_skaters_table}}
+### {{home_team}} Goalies (Season)
+{{home_goalies_season_table}}
+
+---
+
 ## Projected Lineups
 
 ### {{away_team}} Lineup
@@ -93,6 +120,24 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 
   <h2 style="font-size: 24px; color: #111; margin-bottom: 15px;">Team Comparison</h2>
   {{team_comparison_table}}
+
+  <hr style="border: 0; border-top: 1px solid #ccc; margin: 30px 0;" />
+
+  <h2 style="font-size: 24px; color: #111; margin-bottom: 15px;">Team Stat Leaders</h2>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div>
+      <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">{{away_team}} Top Skaters (Last 5 Games)</h3>
+      {{away_last5_skaters_table}}
+      <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">{{away_team}} Goalies (Season)</h3>
+      {{away_goalies_season_table}}
+    </div>
+    <div>
+      <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">{{home_team}} Top Skaters (Last 5 Games)</h3>
+      {{home_last5_skaters_table}}
+      <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">{{home_team}} Goalies (Season)</h3>
+      {{home_goalies_season_table}}
+    </div>
+  </div>
 
   <hr style="border: 0; border-top: 1px solid #ccc; margin: 30px 0;" />
 
@@ -138,6 +183,10 @@ export const TEMPLATE_PLACEHOLDERS: { key: string; description: string }[] = [
   { key: "tv_broadcasts",       description: "TV broadcast networks" },
   { key: "team_comparison_table", description: "Record/PP%/PK% comparison table" },
   { key: "standings_table",     description: "Division standings table" },
+  { key: "away_last5_skaters_table", description: "Away top 5 skaters by points over their last 5 games" },
+  { key: "home_last5_skaters_table", description: "Home top 5 skaters by points over their last 5 games" },
+  { key: "away_goalies_season_table", description: "Away goalies' season-to-date record/GAA/SV%" },
+  { key: "home_goalies_season_table", description: "Home goalies' season-to-date record/GAA/SV%" },
   { key: "away_lineup",         description: "Away projected lineup (plain text)" },
   { key: "home_lineup",         description: "Home projected lineup (plain text)" },
   { key: "away_lineup_images",  description: "Away lineup with player photos inlined" },

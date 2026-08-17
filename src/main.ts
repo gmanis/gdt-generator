@@ -5,7 +5,7 @@ import { renderLineupSlots, parseProjectedLines, applyDailyFaceoffLines, syncLin
 import { generateThread, saveCurrentTemplate, DEFAULT_TEMPLATES } from "./generate";
 import { CacheManager } from "./cache";
 import { MOCK_QUOTES } from "./mockData";
-import { Quote, NewsItem } from "./types";
+import { Quote, NewsItem, LastFiveGamesStats } from "./types";
 import { showToast, showLoading, hideLoading, openModal, closeModal } from "./ui";
 import { NHL_TEAMS } from "./teams";
 import { fetchTweetEmbed, isTweetUrl } from "./tweets";
@@ -139,6 +139,8 @@ function clearGameDetails(refs: AppRefs): void {
   refs.homeTeamLogo.style.display = "none";
   refs.awayNewsContainer.innerHTML = `<p class="no-data">No news loaded</p>`;
   refs.homeNewsContainer.innerHTML = `<p class="no-data">No news loaded</p>`;
+  refs.awayLastFiveContainer.innerHTML = `<p class="no-data">No stats loaded</p>`;
+  refs.homeLastFiveContainer.innerHTML = `<p class="no-data">No stats loaded</p>`;
   refs.awayLineupSlots.innerHTML = "";
   refs.homeLineupSlots.innerHTML = "";
 }
@@ -220,6 +222,8 @@ async function loadSelectedGameDetails(refs: AppRefs): Promise<void> {
   refs.homeTeamName.textContent = `${game.homeTeam.placeName} ${game.homeTeam.commonName}`;
   refs.awayNewsTitle.textContent = `${game.awayTeam.abbrev} News`;
   refs.homeNewsTitle.textContent = `${game.homeTeam.abbrev} News`;
+  refs.awayLastFiveTitle.textContent = game.awayTeam.abbrev;
+  refs.homeLastFiveTitle.textContent = game.homeTeam.abbrev;
 
   const setLogo = (el: HTMLImageElement, url?: string) => {
     el.style.display = url ? "block" : "none";
@@ -258,6 +262,23 @@ async function loadSelectedGameDetails(refs: AppRefs): Promise<void> {
     ]);
     state.stats.away = statsAway;
     state.stats.home = statsHome;
+
+    // Best-effort: pulls each roster player's landing page, so this is the
+    // slowest fetch in this flow. A failure here shouldn't block the rest of
+    // game setup, so it gets its own try/catch rather than joining the block above.
+    try {
+      showLoading(refs, "Loading last 5 game stats…");
+      const [lastFiveAway, lastFiveHome] = await Promise.all([
+        provider.fetchLastFiveGamesStats(game.awayTeam.abbrev, rosterAway, state.demoMode),
+        provider.fetchLastFiveGamesStats(game.homeTeam.abbrev, rosterHome, state.demoMode),
+      ]);
+      state.lastFive.away = lastFiveAway;
+      state.lastFive.home = lastFiveHome;
+      renderLastFive(refs, "away", lastFiveAway);
+      renderLastFive(refs, "home", lastFiveHome);
+    } catch (e) {
+      console.warn("fetchLastFiveGamesStats failed:", e);
+    }
 
     // Same story as DailyFaceoff above — ESPN blocks this deployment's
     // requests, and the News Feed card is hidden outside demo mode anyway.
@@ -307,6 +328,73 @@ function renderNews(refs: AppRefs, team: "away" | "home", news: NewsItem[]): voi
 
     container.appendChild(card);
   });
+}
+
+// ─── Last 5 games stats ───────────────────────────────────────────────────────
+
+function buildStatTable(caption: string, headers: string[], rows: string[][]): HTMLTableElement {
+  const table = document.createElement("table");
+  table.className = "stat-table";
+
+  const cap = document.createElement("caption");
+  cap.textContent = caption;
+  table.appendChild(cap);
+
+  const thead = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  headers.forEach(h => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    row.forEach(cell => {
+      const td = document.createElement("td");
+      td.textContent = cell;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  return table;
+}
+
+function renderLastFive(refs: AppRefs, team: "away" | "home", data: LastFiveGamesStats): void {
+  const container = team === "away" ? refs.awayLastFiveContainer : refs.homeLastFiveContainer;
+  container.innerHTML = "";
+
+  if (data.skaters.length === 0 && data.goalies.length === 0) {
+    container.innerHTML = `<p class="no-data">No stats found</p>`;
+    return;
+  }
+
+  if (data.skaters.length > 0) {
+    container.appendChild(buildStatTable(
+      "Top Skaters (Last 5 Games)",
+      ["Player", "GP", "G", "A", "PTS"],
+      data.skaters.map(p => [p.name, String(p.gamesPlayed), String(p.goals), String(p.assists), String(p.points)]),
+    ));
+  }
+
+  if (data.goalies.length > 0) {
+    container.appendChild(buildStatTable(
+      "Goalies (Season)",
+      ["Goalie", "GP", "Rec", "GAA", "SV%"],
+      data.goalies.map(g => [
+        g.name,
+        String(g.gamesPlayed),
+        `${g.wins}-${g.losses}-${g.otLosses}`,
+        g.goalsAgainstAvg.toFixed(2),
+        g.savePct.toFixed(3).replace(/^0/, ""),
+      ]),
+    ));
+  }
 }
 
 // ─── Quotes ───────────────────────────────────────────────────────────────────

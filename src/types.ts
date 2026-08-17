@@ -80,6 +80,34 @@ export interface TeamStats {
   penaltyKillPct: number;
 }
 
+export interface SkaterLastFiveStats {
+  playerId: number;
+  name: string;
+  positionCode: string;
+  gamesPlayed: number;
+  goals: number;
+  assists: number;
+  points: number;
+}
+
+// Season-to-date, not last-5 — a goalie's last 5 games are often only 1-2
+// starts, too small a sample for a meaningful GAA/SV%.
+export interface GoalieSeasonStats {
+  playerId: number;
+  name: string;
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  otLosses: number;
+  goalsAgainstAvg: number;
+  savePct: number;
+}
+
+export interface LastFiveGamesStats {
+  skaters: SkaterLastFiveStats[];
+  goalies: GoalieSeasonStats[];
+}
+
 export interface LineupConfig {
   forwards: string[][]; // 4 lines, each with [LW, C, RW]
   defense: string[][];  // 3 pairs, each with [LD, RD]

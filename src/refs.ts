@@ -39,6 +39,12 @@ export interface AppRefs {
   awayNewsTitle: HTMLElement;
   homeNewsTitle: HTMLElement;
 
+  // Last 5 games stats
+  awayLastFiveContainer: HTMLDivElement;
+  homeLastFiveContainer: HTMLDivElement;
+  awayLastFiveTitle: HTMLElement;
+  homeLastFiveTitle: HTMLElement;
+
   // Template editor
   templateStyleSelect: HTMLSelectElement;
   templateBodyEditor: HTMLTextAreaElement;

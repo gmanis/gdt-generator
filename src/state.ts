@@ -1,4 +1,4 @@
-import { GameSummary, Roster, LineupConfig, Quote, StandingsTeam, TeamStats, TweetEmbed } from "./types";
+import { GameSummary, Roster, LineupConfig, Quote, StandingsTeam, TeamStats, TweetEmbed, LastFiveGamesStats } from "./types";
 
 export const emptyRoster = (): Roster => ({
   forwards: [],
@@ -23,6 +23,7 @@ export interface AppState {
   standings: StandingsTeam[];
   rosters: { home: Roster; away: Roster };
   stats:   { home: TeamStats | null; away: TeamStats | null };
+  lastFive: { home: LastFiveGamesStats | null; away: LastFiveGamesStats | null };
   lineups: { home: LineupConfig; away: LineupConfig };
   quotes: Quote[];
   selectedTweets: TweetEmbed[];
@@ -37,6 +38,7 @@ export const state: AppState = {
   standings: [],
   rosters: { home: emptyRoster(), away: emptyRoster() },
   stats:   { home: null, away: null },
+  lastFive: { home: null, away: null },
   lineups: { home: emptyLineup(), away: emptyLineup() },
   quotes: [],
   selectedTweets: [],

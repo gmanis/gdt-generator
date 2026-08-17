@@ -26,7 +26,7 @@ function getRenderer(style: string): FormatRenderer {
 // ─── Template values builder ──────────────────────────────────────────────────
 
 function buildValues(state: AppState, renderer: FormatRenderer): Record<string, string> {
-  const { selectedGame: game, standings, stats, lineups, quotes, rosters } = state;
+  const { selectedGame: game, standings, stats, lastFive, lineups, quotes, rosters } = state;
   if (!game) return {};
 
   const values: Record<string, string> = {};
@@ -91,6 +91,36 @@ function buildValues(state: AppState, renderer: FormatRenderer): Record<string, 
   } else {
     values["team_comparison_table"] = renderer.renderBold("Stats comparison unavailable.");
   }
+
+  // Top skaters by points over their last 5 games, and every active
+  // goalie's season-to-date record/GAA/SV% (a last-5 sample is too small to
+  // be a meaningful goalie stat — often just 1-2 starts).
+  const skaterRows = (s: typeof lastFive.home) =>
+    (s?.skaters ?? []).map(p => [p.name, p.positionCode, String(p.gamesPlayed), String(p.goals), String(p.assists), String(p.points)]);
+  const goalieRows = (s: typeof lastFive.home) =>
+    (s?.goalies ?? []).map(g => [
+      g.name,
+      String(g.gamesPlayed),
+      `${g.wins}-${g.losses}-${g.otLosses}`,
+      g.goalsAgainstAvg.toFixed(2),
+      g.savePct.toFixed(3).replace(/^0/, ""),
+    ]);
+
+  const skaterHeaders = ["Player", "Pos", "GP", "G", "A", "PTS"];
+  const goalieHeaders = ["Goalie", "GP", "W-L-OTL", "GAA", "SV%"];
+
+  values["away_last5_skaters_table"] = skaterRows(lastFive.away).length > 0
+    ? renderer.renderTable(skaterHeaders, skaterRows(lastFive.away))
+    : renderer.renderItalic("No last-5-games stats available.");
+  values["home_last5_skaters_table"] = skaterRows(lastFive.home).length > 0
+    ? renderer.renderTable(skaterHeaders, skaterRows(lastFive.home))
+    : renderer.renderItalic("No last-5-games stats available.");
+  values["away_goalies_season_table"] = goalieRows(lastFive.away).length > 0
+    ? renderer.renderTable(goalieHeaders, goalieRows(lastFive.away))
+    : renderer.renderItalic("No goalie stats available.");
+  values["home_goalies_season_table"] = goalieRows(lastFive.home).length > 0
+    ? renderer.renderTable(goalieHeaders, goalieRows(lastFive.home))
+    : renderer.renderItalic("No goalie stats available.");
 
   // Lineups — plain text, or with headshots inlined per player
   values["away_lineup"] = renderer.renderLineup(lineups.away);

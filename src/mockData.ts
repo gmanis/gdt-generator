@@ -1,4 +1,4 @@
-import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, Quote, TweetEmbed, DailyFaceoffLines } from "./types";
+import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, Quote, TweetEmbed, DailyFaceoffLines, LastFiveGamesStats } from "./types";
 
 export const MOCK_STANDINGS: StandingsTeam[] = [
   // Atlantic Division
@@ -230,6 +230,35 @@ export const MOCK_TWEET_EMBEDS: Record<string, TweetEmbed> = {
     text: "Shesterkin in net for New York. Sullivan still finalizing the fourth line ahead of puck drop.",
     html: `<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Shesterkin in net for New York. Sullivan still finalizing the fourth line ahead of puck drop.</p>&mdash; Rangers Beat Demo (@RangersBeatDemo) <a href="https://x.com/RangersBeatDemo/status/2000000000000000001">March 10, 2026</a></blockquote>`
   }
+};
+
+// skaters: totals over their last 5 games. goalies: season-to-date totals.
+export const MOCK_LAST_FIVE: Record<string, LastFiveGamesStats> = {
+  NJD: {
+    skaters: [
+      { playerId: 8481559, name: "Jack Hughes", positionCode: "C", gamesPlayed: 5, goals: 4, assists: 3, points: 7 },
+      { playerId: 8479407, name: "Jesper Bratt", positionCode: "RW", gamesPlayed: 5, goals: 2, assists: 4, points: 6 },
+      { playerId: 8477939, name: "Nico Hischier", positionCode: "C", gamesPlayed: 5, goals: 3, assists: 2, points: 5 },
+      { playerId: 8478406, name: "Timo Meier", positionCode: "LW", gamesPlayed: 5, goals: 3, assists: 1, points: 4 },
+      { playerId: 8476462, name: "Dougie Hamilton", positionCode: "D", gamesPlayed: 4, goals: 1, assists: 3, points: 4 },
+    ],
+    goalies: [
+      { playerId: 8474593, name: "Jacob Markstrom", gamesPlayed: 40, wins: 22, losses: 14, otLosses: 4, goalsAgainstAvg: 2.45, savePct: 0.905 },
+      { playerId: 8474596, name: "Jake Allen", gamesPlayed: 22, wins: 13, losses: 7, otLosses: 1, goalsAgainstAvg: 2.68, savePct: 0.897 },
+    ],
+  },
+  NYR: {
+    skaters: [
+      { playerId: 8476459, name: "Mika Zibanejad", positionCode: "C", gamesPlayed: 5, goals: 3, assists: 4, points: 7 },
+      { playerId: 8476468, name: "J.T. Miller", positionCode: "C", gamesPlayed: 5, goals: 3, assists: 3, points: 6 },
+      { playerId: 8479323, name: "Adam Fox", positionCode: "D", gamesPlayed: 5, goals: 1, assists: 4, points: 5 },
+      { playerId: 8482109, name: "Alexis Lafrenière", positionCode: "LW", gamesPlayed: 5, goals: 2, assists: 2, points: 4 },
+      { playerId: 8477416, name: "Oliver Bjorkstrand", positionCode: "RW", gamesPlayed: 4, goals: 2, assists: 1, points: 3 },
+    ],
+    goalies: [
+      { playerId: 8478048, name: "Igor Shesterkin", gamesPlayed: 55, wins: 34, losses: 16, otLosses: 5, goalsAgainstAvg: 2.02, savePct: 0.921 },
+    ],
+  },
 };
 
 // Demo-mode stand-in for the real /api/dailyfaceoff fetch. The NYR entry mirrors

@@ -1,4 +1,4 @@
-import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, TeamStats, TeamSummary, Player } from "./types";
+import { GameSummary, GameDetails, Roster, StandingsTeam, NewsItem, TeamStats, TeamSummary, Player, LastFiveGamesStats, SkaterLastFiveStats, GoalieSeasonStats } from "./types";
 import { CacheManager } from "./cache";
 import { fetchWithProxy } from "./proxy";
 import * as mock from "./mockData";
@@ -16,6 +16,7 @@ export interface LeagueProvider {
   fetchStandings(demoMode: boolean): Promise<StandingsTeam[]>;
   fetchTeamStats(teamAbbrev: string, standings: StandingsTeam[], demoMode: boolean): Promise<TeamStats | null>;
   fetchTeamNews(teamAbbrev: string, demoMode: boolean): Promise<NewsItem[]>;
+  fetchLastFiveGamesStats(teamAbbrev: string, roster: Roster, demoMode: boolean): Promise<LastFiveGamesStats>;
 }
 
 export class NhlLeagueProvider implements LeagueProvider {
@@ -304,6 +305,92 @@ export class NhlLeagueProvider implements LeagueProvider {
     } catch (e) {
       console.error("fetchTeamNews error:", e);
       return [];
+    }
+  }
+
+  /**
+   * Ranked "hot list" for a team: top skaters by points over their last 5
+   * games, and every active goalie's record/GAA/SV% for the full season —
+   * a goalie's last 5 games often includes only 1-2 starts, too small a
+   * sample to be a meaningful stat, so goalies use season-to-date totals
+   * instead (both pulled from the same player landing endpoint).
+   */
+  async fetchLastFiveGamesStats(teamAbbrev: string, roster: Roster, demoMode: boolean): Promise<LastFiveGamesStats> {
+    if (demoMode) {
+      return mock.MOCK_LAST_FIVE[teamAbbrev] || { skaters: [], goalies: [] };
+    }
+
+    const skaterPlayers = [...roster.forwards, ...roster.defensemen];
+
+    const [skaterResults, goalieResults] = await Promise.all([
+      Promise.all(skaterPlayers.map(p => this.fetchPlayerLastFiveSkater(p))),
+      Promise.all(roster.goalies.map(p => this.fetchPlayerSeasonGoalieStats(p))),
+    ]);
+
+    const skaters = skaterResults
+      .filter((s): s is SkaterLastFiveStats => s !== null && s.gamesPlayed > 0)
+      .sort((a, b) => b.points - a.points)
+      .slice(0, 5);
+
+    const goalies = goalieResults
+      .filter((g): g is GoalieSeasonStats => g !== null && g.gamesPlayed > 0)
+      .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+
+    return { skaters, goalies };
+  }
+
+  private async fetchPlayerLanding(playerId: number): Promise<any> {
+    const url = `https://api-web.nhle.com/v1/player/${playerId}/landing`;
+    const cacheKey = `nhl_player_landing_${playerId}`;
+    const ttl = 1000 * 60 * 60 * 6; // 6 hours
+    return fetchWithProxy<any>(url, cacheKey, ttl);
+  }
+
+  private async fetchPlayerLastFiveSkater(p: Player): Promise<SkaterLastFiveStats | null> {
+    try {
+      const data = await this.fetchPlayerLanding(p.id);
+      const games: any[] = data.last5Games || [];
+      const totals = games.reduce(
+        (acc, g) => ({
+          goals: acc.goals + (g.goals || 0),
+          assists: acc.assists + (g.assists || 0),
+          points: acc.points + (g.points || 0),
+        }),
+        { goals: 0, assists: 0, points: 0 },
+      );
+
+      return {
+        playerId: p.id,
+        name: `${p.firstName} ${p.lastName}`,
+        positionCode: p.positionCode,
+        gamesPlayed: games.length,
+        ...totals,
+      };
+    } catch (e) {
+      console.warn(`fetchPlayerLastFiveSkater failed for player ${p.id}:`, e);
+      return null;
+    }
+  }
+
+  private async fetchPlayerSeasonGoalieStats(p: Player): Promise<GoalieSeasonStats | null> {
+    try {
+      const data = await this.fetchPlayerLanding(p.id);
+      const season = data.featuredStats?.regularSeason?.subSeason;
+      if (!season) return null;
+
+      return {
+        playerId: p.id,
+        name: `${p.firstName} ${p.lastName}`,
+        gamesPlayed: season.gamesPlayed || 0,
+        wins: season.wins || 0,
+        losses: season.losses || 0,
+        otLosses: season.otLosses || 0,
+        goalsAgainstAvg: season.goalsAgainstAverage || 0,
+        savePct: season.savePctg || 0,
+      };
+    } catch (e) {
+      console.warn(`fetchPlayerSeasonGoalieStats failed for player ${p.id}:`, e);
+      return null;
     }
   }
 

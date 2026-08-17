@@ -454,6 +454,46 @@ select:focus, input[type="date"]:focus, input[type="text"]:focus, textarea:focus
   overflow: hidden;
 }
 
+/* Last 5 Games Stats */
+.last-five-container {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.stat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  margin-bottom: 0.85rem;
+}
+
+.stat-table caption {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+  padding-bottom: 0.3rem;
+}
+
+.stat-table th, .stat-table td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.stat-table th {
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.stat-table td:not(:first-child), .stat-table th:not(:first-child) {
+  text-align: center;
+}
+
 /* Right Panel Elements */
 .preview-tabs {
   display: flex;
