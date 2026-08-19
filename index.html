@@ -116,6 +116,34 @@
           </div>
         </div>
 
+        <!-- Timezone Translator Card -->
+        <div class="card">
+          <div class="card-title">Timezone Translator</div>
+
+          <div class="add-quote-form" style="grid-template-columns: 1fr auto; margin-bottom:0.75rem;">
+            <input
+              type="text"
+              id="timezoneCitySearch"
+              data-ref="timezoneCitySearch"
+              list="timezoneCityOptions"
+              placeholder="Type a city or timezone…"
+              autocomplete="off"
+            >
+            <datalist id="timezoneCityOptions" data-ref="timezoneCityOptions"></datalist>
+            <button data-ref="addTimezoneCityBtn" class="quick-paste-btn">Add City</button>
+          </div>
+
+          <div class="section-label" style="margin-top:0;">Selected Cities</div>
+          <div class="quotes-list" data-ref="timezoneCitiesContainer" style="margin-top:0.5rem; margin-bottom:0.75rem;">
+            <p class="no-data" style="text-align:center">No cities added</p>
+          </div>
+
+          <div class="section-label">Game Time by City</div>
+          <div data-ref="timezoneTableContainer" class="timezone-table-container">
+            <p class="no-data">Select a game and add cities to compare times</p>
+          </div>
+        </div>
+
         <!-- Last 5 Games Stats Card -->
         <div class="card">
           <div class="card-title">Team Stat Leaders</div>

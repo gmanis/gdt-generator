@@ -494,6 +494,10 @@ select:focus, input[type="date"]:focus, input[type="text"]:focus, textarea:focus
   text-align: center;
 }
 
+.timezone-table-container {
+  overflow-x: auto;
+}
+
 .starting-goalies {
   display: flex;
   align-items: center;

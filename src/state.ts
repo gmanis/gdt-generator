@@ -27,6 +27,7 @@ export interface AppState {
   lineups: { home: LineupConfig; away: LineupConfig };
   quotes: Quote[];
   selectedTweets: TweetEmbed[];
+  timezoneCities: string[];
 }
 
 export const state: AppState = {
@@ -42,4 +43,5 @@ export const state: AppState = {
   lineups: { home: emptyLineup(), away: emptyLineup() },
   quotes: [],
   selectedTweets: [],
+  timezoneCities: [],
 };

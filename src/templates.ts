@@ -6,6 +6,9 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 
 [B]TV Broadcasts:[/B] {{tv_broadcasts}}
 
+[B][SIZE=5]Game Time By City[/SIZE][/B]
+{{timezone_table}}
+
 [HR][/HR]
 
 [B][SIZE=5]Team Comparison[/SIZE][/B]
@@ -63,6 +66,9 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
 
 **TV Broadcasts:** {{tv_broadcasts}}
 
+## Game Time By City
+{{timezone_table}}
+
 ---
 
 ## Team Comparison
@@ -113,6 +119,9 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
     <p style="font-style: italic; color: #888;">{{game_date}} - {{game_time}} | {{venue}}</p>
     <p><strong>TV Broadcasts:</strong> {{tv_broadcasts}}</p>
   </div>
+
+  <h2 style="font-size: 24px; color: #111; margin-bottom: 15px;">Game Time By City</h2>
+  {{timezone_table}}
 
   <hr style="border: 0; border-top: 1px solid #ccc; margin: 30px 0;" />
 
@@ -178,6 +187,7 @@ export const TEMPLATE_PLACEHOLDERS: { key: string; description: string }[] = [
   { key: "game_date",           description: "Formatted game date" },
   { key: "game_time",           description: "Formatted game time" },
   { key: "tv_broadcasts",       description: "TV broadcast networks" },
+  { key: "timezone_table",      description: "Game time converted to each selected city's local timezone (horizontal table)" },
   { key: "team_comparison_table", description: "Record/PP%/PK% comparison table, plus each team's season points/goals/assists leaders" },
   { key: "standings_table",     description: "Division standings table" },
   { key: "away_last5_skaters_table", description: "Away top 5 skaters by points over their last 5 games" },

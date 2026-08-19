@@ -4,6 +4,7 @@ import { BbCodeRenderer, MarkdownRenderer, HtmlRenderer, FormatRenderer, Headsho
 import { DEFAULT_TEMPLATES, TemplateEngine } from "./templates";
 import { Roster, StatLeader } from "./types";
 import { resolveStartingGoalie, StartingGoalieInfo } from "./goalieCompare";
+import { gameTimesForCities } from "./timezones";
 import { showToast } from "./ui";
 
 // ─── Headshot lookup ──────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ function formatGoalieStat(g: StartingGoalieInfo, pick: (s: NonNullable<StartingG
 }
 
 function buildValues(state: AppState, renderer: FormatRenderer): Record<string, string> {
-  const { selectedGame: game, standings, stats, lastFive, lineups, quotes, rosters } = state;
+  const { selectedGame: game, standings, stats, lastFive, lineups, quotes, rosters, timezoneCities } = state;
   if (!game) return {};
 
   const values: Record<string, string> = {};
@@ -56,6 +57,12 @@ function buildValues(state: AppState, renderer: FormatRenderer): Record<string, 
   values["tv_broadcasts"] = game.tvBroadcasts.length > 0
     ? game.tvBroadcasts.map(b => b.network).join(", ")
     : "TBD";
+
+  // Timezone translator — game time in each user-selected city, one row across
+  const tzEntries = gameTimesForCities(game.startTimeUTC, timezoneCities);
+  values["timezone_table"] = tzEntries.length > 0
+    ? renderer.renderTable(tzEntries.map(e => e.name), [tzEntries.map(e => e.time)])
+    : renderer.renderItalic("No additional cities selected.");
 
   // Standings (division of the home team)
   const homeEntry = standings.find(t => t.teamAbbrev === game.homeTeam.abbrev);

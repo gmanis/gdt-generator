@@ -12,6 +12,7 @@ import { fetchTweetEmbed, isTweetUrl } from "./tweets";
 import { TEMPLATE_PLACEHOLDERS } from "./templates";
 import { fetchDailyFaceoffLines } from "./dailyfaceoff";
 import { resolveStartingGoalie, StartingGoalieInfo } from "./goalieCompare";
+import { CITY_TIMEZONES, cityOptionLabel, resolveTimeZoneInput, gameTimesForCities } from "./timezones";
 
 const provider = new NhlLeagueProvider();
 
@@ -145,6 +146,7 @@ function clearGameDetails(refs: AppRefs): void {
   refs.startingGoaliesContainer.innerHTML = `<p class="no-data">No stats loaded</p>`;
   refs.awayLineupSlots.innerHTML = "";
   refs.homeLineupSlots.innerHTML = "";
+  refs.timezoneTableContainer.innerHTML = `<p class="no-data">Select a game and add cities to compare times</p>`;
 }
 
 // ─── Data loading ─────────────────────────────────────────────────────────────
@@ -234,6 +236,8 @@ async function loadSelectedGameDetails(refs: AppRefs): Promise<void> {
   };
   setLogo(refs.awayTeamLogo, game.awayTeam.logo);
   setLogo(refs.homeTeamLogo, game.homeTeam.logo);
+
+  renderTimezoneTable(refs);
 
   try {
     const [rosterAway, rosterHome] = await Promise.all([
@@ -442,6 +446,105 @@ function renderStartingGoalies(refs: AppRefs): void {
   refs.startingGoaliesContainer.appendChild(buildGoalieProfile(homeGoalie));
 }
 
+// ─── Timezone translator ──────────────────────────────────────────────────────
+
+/** Refills the searchable datalist with whatever hasn't already been selected. */
+function populateTimezoneCityOptions(refs: AppRefs): void {
+  refs.timezoneCityOptions.innerHTML = "";
+  CITY_TIMEZONES
+    .filter(c => !state.timezoneCities.includes(c.timeZone))
+    .forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = cityOptionLabel(c);
+      refs.timezoneCityOptions.appendChild(opt);
+    });
+}
+
+/** Loads persisted city selections, migrating any pre-tz-database saves (which stored a plain city name) to zone ids. */
+function loadTimezoneCities(): void {
+  const saved: string[] = JSON.parse(localStorage.getItem("gtg_timezone_cities") ?? "[]");
+  state.timezoneCities = saved
+    .map(v => CITY_TIMEZONES.find(c => c.timeZone === v || c.name === v)?.timeZone)
+    .filter((id): id is string => !!id);
+}
+
+function saveTimezoneCities(): void {
+  localStorage.setItem("gtg_timezone_cities", JSON.stringify(state.timezoneCities));
+}
+
+function addTimezoneCity(refs: AppRefs): void {
+  const zoneId = resolveTimeZoneInput(refs.timezoneCitySearch.value);
+  if (!zoneId) { showToast(refs, "Type a city or timezone and pick a match from the list."); return; }
+  if (state.timezoneCities.includes(zoneId)) { showToast(refs, "Already added!"); return; }
+
+  state.timezoneCities.push(zoneId);
+  saveTimezoneCities();
+  refs.timezoneCitySearch.value = "";
+  populateTimezoneCityOptions(refs);
+  renderTimezoneCities(refs);
+  renderTimezoneTable(refs);
+}
+
+function removeTimezoneCity(refs: AppRefs, zoneId: string): void {
+  state.timezoneCities = state.timezoneCities.filter(c => c !== zoneId);
+  saveTimezoneCities();
+  populateTimezoneCityOptions(refs);
+  renderTimezoneCities(refs);
+  renderTimezoneTable(refs);
+}
+
+function renderTimezoneCities(refs: AppRefs): void {
+  refs.timezoneCitiesContainer.innerHTML = "";
+
+  if (state.timezoneCities.length === 0) {
+    refs.timezoneCitiesContainer.innerHTML = `<p class="no-data" style="text-align:center">No cities added</p>`;
+    return;
+  }
+
+  state.timezoneCities.forEach(zoneId => {
+    const city = CITY_TIMEZONES.find(c => c.timeZone === zoneId);
+
+    const item = document.createElement("div");
+    item.className = "quote-item";
+
+    const body = document.createElement("div");
+    body.className = "quote-content";
+    body.textContent = city?.name ?? zoneId;
+
+    const del = document.createElement("button");
+    del.className = "delete-quote-btn";
+    del.innerHTML = "&times;";
+    del.title = "Remove City";
+    del.addEventListener("click", () => removeTimezoneCity(refs, zoneId));
+
+    item.appendChild(body);
+    item.appendChild(del);
+    refs.timezoneCitiesContainer.appendChild(item);
+  });
+}
+
+/** Rebuilds the horizontal "game time by city" table from the selected game and cities. */
+function renderTimezoneTable(refs: AppRefs): void {
+  const game = state.selectedGame;
+  refs.timezoneTableContainer.innerHTML = "";
+
+  if (!game) {
+    refs.timezoneTableContainer.innerHTML = `<p class="no-data">Select a game and add cities to compare times</p>`;
+    return;
+  }
+  if (state.timezoneCities.length === 0) {
+    refs.timezoneTableContainer.innerHTML = `<p class="no-data">Add a city above to compare game times</p>`;
+    return;
+  }
+
+  const entries = gameTimesForCities(game.startTimeUTC, state.timezoneCities);
+  refs.timezoneTableContainer.appendChild(buildStatTable(
+    "Game Time by City",
+    entries.map(e => e.name),
+    [entries.map(e => e.time)],
+  ));
+}
+
 // ─── Quotes ───────────────────────────────────────────────────────────────────
 
 function loadQuotes(refs: AppRefs): void {
@@ -601,6 +704,11 @@ function init(): void {
   loadTweets();
   renderSelectedTweets(refs);
 
+  // Timezone translator
+  loadTimezoneCities();
+  populateTimezoneCityOptions(refs);
+  renderTimezoneCities(refs);
+
   // ── Event listeners ──────────────────────────────────────────────────────
 
   // Demo mode (in Settings)
@@ -671,6 +779,12 @@ function init(): void {
 
   // Quotes
   refs.addQuoteBtn.addEventListener("click", () => addQuote(refs));
+
+  // Timezone translator
+  refs.addTimezoneCityBtn.addEventListener("click", () => addTimezoneCity(refs));
+  refs.timezoneCitySearch.addEventListener("keydown", e => {
+    if (e.key === "Enter") addTimezoneCity(refs);
+  });
 
   // Media tweets
   refs.addTweetUrlBtn.addEventListener("click", () => {

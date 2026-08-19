@@ -46,6 +46,13 @@ export interface AppRefs {
   homeLastFiveTitle: HTMLElement;
   startingGoaliesContainer: HTMLDivElement;
 
+  // Timezone translator
+  timezoneCitySearch: HTMLInputElement;
+  timezoneCityOptions: HTMLDataListElement;
+  addTimezoneCityBtn: HTMLButtonElement;
+  timezoneCitiesContainer: HTMLDivElement;
+  timezoneTableContainer: HTMLDivElement;
+
   // Template editor
   templateStyleSelect: HTMLSelectElement;
   templateBodyEditor: HTMLTextAreaElement;
